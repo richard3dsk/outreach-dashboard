@@ -582,7 +582,7 @@ The 3D.sk Team
             <option value="first">First Contact</option>
             <option value="value">Value Offering</option>
             <option value="follow">Follow-up</option>
-            <option value="account">Bezplatný účet</option>
+<option value="account">Free Account</option>
           </select>
         </label>
         <label>First Contact Date
@@ -603,7 +603,7 @@ The 3D.sk Team
         <p>Download all contacts including notes and dates in CSV format.</p>
         <button id="btn-export">Download CSV</button>
         <ul>
-          <li>Name a informácie o umelcovi</li>
+<li>Name and artist info</li>
           <li>Current stage and contact dates</li>
           <li>Notes and messages</li>
         </ul>
@@ -654,8 +654,6 @@ function loadTracker() {
     saveTracker();
   }
 }
-      }
-    }
     function saveTracker() {
       localStorage.setItem(trackerKey, JSON.stringify(contactData));
     }
