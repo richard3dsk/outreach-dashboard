@@ -64,7 +64,7 @@
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZOSOSxfS-YBKi0GNNDJ4FkwX1yNkg47Wivbb1936rkHiFabJ98rerOsOEdlZ2WFzxr2R5J0ZWWp2p/pub?gid=0&single=true&output=csv";
 
-/* ---------------- CSV loader (robust + fallback) ---------------- */
+/* ---------- CSV loader (robust + fallback) ---------- */
 async function loadCSV(url){
   const res = await fetch(url, { cache: "no-store" });
   let text = await res.text();
@@ -93,7 +93,6 @@ async function loadCSV(url){
 
   const matched = mapByName.filter(Boolean).length;
   const useOrderFallback = matched < Math.ceil(headersRaw.length * 0.5);
-
   const map = useOrderFallback
     ? headersRaw.map((_, i) => canonical[i] || null)
     : mapByName;
@@ -108,7 +107,7 @@ async function loadCSV(url){
     return obj;
   });
 
-  // Zapíš do debug panelu
+  // Debug info
   const dbg = document.getElementById('dbg');
   if (dbg) {
     dbg.innerHTML =
@@ -121,7 +120,7 @@ async function loadCSV(url){
   return rows;
 }
 
-/* CSV line parser that respects quoted commas */
+/* CSV line parser (quotes aware) */
 function parseCSVLine(line){
   const out = []; let cur = ''; let q=false;
   for (let i=0;i<line.length;i++){
@@ -156,10 +155,7 @@ function fmtStage(stage){
   const s = stage || '';
   return `<span class="badge stage-${s}">${s || '—'}</span>`;
 }
-
-function safe(v, fallback=''){
-  return (v && String(v).trim().length ? v : fallback);
-}
+function safe(v, fallback=''){ return (v && String(v).trim().length ? v : fallback); }
 
 function renderKpis(k){
   document.getElementById('k_total').textContent = k.total;
@@ -256,18 +252,21 @@ function renderTabs(rows){
     };
     el.appendChild(btn);
   });
-  if (el.firstChild) el.firstChild.classList.add('active');
+
+  /* Hlavná oprava: spusti prvý filter klikom,
+     aby sa tabuľka vykreslila hneď po načítaní. */
+  if (el.firstChild) el.firstChild.click();
 }
 
-/* ---------------- init ---------------- */
+/* ---------- init ---------- */
 (async function init(){
   try{
     const rows = await loadCSV(CSV_URL);
     renderKpis(countKPIs(rows));
-    renderTabs(rows);
-    renderTable(rows);
+    renderTabs(rows);           // .click() spustí prvé vykreslenie
   }catch(err){
-    document.getElementById('view').innerHTML = `<div class="notice"><b>Failed to load data.</b><br>${escapeHTML(err)}</div>`;
+    document.getElementById('view').innerHTML =
+      `<div class="notice"><b>Failed to load data.</b><br>${escapeHTML(err)}</div>`;
     console.error(err);
   }
 })();
