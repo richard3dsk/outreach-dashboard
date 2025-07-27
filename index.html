@@ -57,19 +57,16 @@
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZOSOSxfS-YBKi0GNNDJ4FkwX1yNkg47Wivbb1936rkHiFabJ98rerOsOEdlZ2WFzxr2R5J0ZWWp2p/pub?gid=0&single=true&output=csv";
 
-/* --- Robustné načítanie CSV s mapovaním hlavičiek na kanonické názvy --- */
+/* ---------------- CSV loader (robust) ---------------- */
 async function loadCSV(url){
   const res = await fetch(url, { cache: "no-store" });
   let text = await res.text();
-
-  // odstráň BOM
-  text = text.replace(/^\uFEFF/, "");
+  text = text.replace(/^\uFEFF/, ""); // strip BOM
 
   const lines = text.trim().split(/\r?\n/);
   const headerLine = lines.shift() || "";
   const headersRaw = parseCSVLine(headerLine);
 
-  // kanonické kľúče, ktoré používame v aplikácii
   const canonical = [
     "id","full_name","first_name","role","linkedin_url","stage",
     "sent_phase1_at","sent_phase2_at","sent_phase3_at",
@@ -77,36 +74,40 @@ async function loadCSV(url){
     "template_set","evidence"
   ];
 
-  // normalizačná funkcia (lowercase, bez ne-alfanumerických znakov a podčiarkovníkov)
   const norm = s => String(s)
     .replace(/\uFEFF/g,"")
     .replace(/^"|"$/g,"")
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9_]+/g,""); // odstráni medzery, pomlčky, atď.
+    .replace(/[^a-z0-9_]+/g,"");
 
   const canonicalMap = new Map(canonical.map(k => [norm(k), k]));
+  const mapByName = headersRaw.map(h => canonicalMap.get(norm(h)) || null);
 
-  // namapuj index -> kanonický kľúč (ak nájdeme zhodu)
-  const mapIndexToKey = headersRaw.map(h => {
-    const n = norm(h);
-    return canonicalMap.get(n) || null;
-  });
+  const matched = mapByName.filter(Boolean).length;
+  const useOrderFallback = matched < Math.ceil(headersRaw.length * 0.5);
+
+  const map = useOrderFallback
+    ? headersRaw.map((_, i) => canonical[i] || null)
+    : mapByName;
 
   const rows = lines.map(parseCSVLine).map(cols => {
     const obj = {};
-    mapIndexToKey.forEach((key, i) => {
-      if (!key) return; // neznáma hlavička – ignoruj
+    map.forEach((key, i) => {
+      if (!key) return;
       const v = (cols[i] ?? "").replace(/^"|"$/g, "");
       obj[key] = v;
     });
     return obj;
   });
 
+  // Debug pre prípad potreby
+  // console.log({headersRaw, map, rows});
+
   return rows;
 }
 
-/* CSV line parser, rešpektuje čiarky v úvodzovkách */
+/* CSV line parser that respects quoted commas */
 function parseCSVLine(line){
   const out = []; let cur = ''; let q=false;
   for (let i=0;i<line.length;i++){
@@ -135,7 +136,14 @@ function countKPIs(rows){
   return { total, p1, p2, p2pro, p3, replied };
 }
 
-function fmtStage(stage){ return `<span class="badge stage-${stage}">${stage}</span>`; }
+function fmtStage(stage){
+  const s = stage || '';
+  return `<span class="badge stage-${s}">${s || '—'}</span>`;
+}
+
+function safe(v, fallback=''){
+  return (v && String(v).trim().length ? v : fallback);
+}
 
 function renderKpis(k){
   document.getElementById('k_total').textContent = k.total;
@@ -153,15 +161,24 @@ function renderTable(rows){
     ['reply1_at','Reply1 at'],['reply1_note','Reply1 note'],['reply2_at','Reply2 at'],['reply2_note','Reply2 note'],
     ['reply3_at','Reply3 at'],['reply3_note','Reply3 note'],['template_set','Template']
   ];
-  let html = '<div class="card" style="overflow:auto">\n<table><thead><tr>' + cols.map(c=>`<th>${c[1]}</th>`).join('') + '</tr></thead><tbody>';
-  for (const r of rows){
-    html += '<tr>' + cols.map(([k,label])=>{
-      let v = r[k]||'';
-      if(k==='linkedin_url' && v) v = `<a class="link" href="${v}" target="_blank">profile</a>`;
-      if(k==='stage') v = fmtStage(r[k]||'');
-      return `<td>${v}</td>`;
-    }).join('') + '</tr>';
-  }
+  let html = '<div class="card" style="overflow:auto">\n<table><thead><tr>' +
+    cols.map(c=>`<th>${c[1]}</th>`).join('') +
+    '</tr></thead><tbody>';
+
+  rows.forEach((r, idx) => {
+    html += '<tr>';
+    cols.forEach(([k]) => {
+      let v = r[k];
+      if (k==='id') v = safe(v, String(idx+1));            // fallback na poradové číslo
+      if (k==='full_name') v = safe(v, '(no name)');
+      if (k==='linkedin_url' && v) v = `<a class="link" href="${v}" target="_blank">profile</a>`;
+      if (k==='stage') v = fmtStage(v);
+      if (v == null) v = '';
+      html += `<td>${v}</td>`;
+    });
+    html += '</tr>';
+  });
+
   html += '</tbody></table></div>';
   document.getElementById('view').innerHTML = html;
 }
@@ -195,14 +212,14 @@ function renderTabs(rows){
     };
     el.appendChild(btn);
   });
-  el.firstChild.classList.add('active');
+  if (el.firstChild) el.firstChild.classList.add('active');
 }
 
+/* ---------------- init ---------------- */
 (async function init(){
   try{
     const rows = await loadCSV(CSV_URL);
-    const k = countKPIs(rows);
-    renderKpis(k);
+    renderKpis(countKPIs(rows));
     renderTabs(rows);
     renderTable(rows);
   }catch(err){
