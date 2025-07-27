@@ -19,10 +19,13 @@
     nav.tabs { display:flex; gap:8px; margin: 24px 0; flex-wrap: wrap; }
     nav.tabs button { border:1px solid #e5e7eb; background:#fff; padding:10px 14px; border-radius:10px; cursor:pointer; }
     nav.tabs button.active { background:#111; color:#fff; border-color:#111; }
-    table { width:100%; border-collapse: collapse; font-size:14px; }
-    th, td { border-bottom: 1px solid #f0f0f0; padding:10px; text-align:left; vertical-align: top; color:#111 !important; }
-    th { background:#fcfcfc; position: sticky; top: 64px; z-index: 5; }
-    tbody tr { height:auto; }
+
+    table { width:100%; border-collapse: collapse; font-size:14px; table-layout:auto; }
+    th, td { border-bottom: 1px solid #e5e7eb; padding:10px; text-align:left; vertical-align: top; color:#111 !important; background:#fff; }
+    th { background:#fcfcfc; font-weight:600; }
+    tbody tr:nth-child(even) td { background:#f9fafb; }
+    .tablewrap { overflow:auto; max-height:520px; border-radius:12px; }
+
     .badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid #e5e7eb; }
     .stage-queued { background:#fff7ed; border-color:#fdba74; }
     .stage-phase1_sent { background:#eef2ff; border-color:#c7d2fe; }
@@ -69,7 +72,6 @@ const normStr = s => String(s ?? "").replace(/\uFEFF/g,"").trim();
 const stageOf = r => normStr(r.stage).toLowerCase();
 const tmplOf  = r => (normStr(r.template_set).toLowerCase() || 'original');
 
-/* ---------- CSV loader ---------- */
 async function loadCSV(url){
   const res = await fetch(url, { cache: "no-store" });
   let text = await res.text();
@@ -108,7 +110,6 @@ async function loadCSV(url){
     return obj;
   });
 
-  // Debug
   const dbg = document.getElementById('dbg');
   if (dbg) {
     const counts = {
@@ -130,7 +131,6 @@ async function loadCSV(url){
   return rows;
 }
 
-/* CSV line parser (quotes aware) */
 function parseCSVLine(line){
   const out = []; let cur = ''; let q=false;
   for (let i=0;i<line.length;i++){
@@ -161,13 +161,15 @@ function countKPIs(rows){
   return { total, p1, p2, p2pro, p3, replied };
 }
 
-function fmtStage(stage){
-  const s = stageOf({stage});
-  return `<span class="badge stage-${s}">${s || '—'}</span>`;
+function renderKpis(k){
+  document.getElementById('k_total').textContent = k.total;
+  document.getElementById('k_p1').textContent = k.p1;
+  document.getElementById('k_p2').textContent = k.p2;
+  document.getElementById('k_p2pro').textContent = k.p2pro;
+  document.getElementById('k_p3').textContent = k.p3;
+  document.getElementById('k_rep').textContent = k.replied;
 }
-function safe(v, fallback=''){ return (v && String(v).trim().length ? v : fallback); }
 
-/* --- JEDNODUCHÝ STRING RENDERER TABUĽKY --- */
 function renderTable(rows){
   const cols = [
     ['id','ID'],['full_name','Name'],['role','Role'],['linkedin_url','LinkedIn'],
@@ -178,7 +180,7 @@ function renderTable(rows){
 
   const container = document.getElementById('view');
 
-  let html = '<div class="card" style="overflow:auto"><table><thead><tr>';
+  let html = '<div class="card tablewrap"><table><thead><tr>';
   html += cols.map(([,label]) => `<th>${label}</th>`).join('');
   html += '</tr></thead><tbody>';
 
@@ -188,9 +190,7 @@ function renderTable(rows){
       let v = r[key] ?? '';
       if (key==='id') v = v || String(idx+1);
       if (key==='full_name') v = v || '(no name)';
-      if (key==='linkedin_url' && v) {
-        v = `<a class="link" href="${v}" target="_blank">profile</a>`;
-      }
+      if (key==='linkedin_url' && v) v = `<a class="link" href="${v}" target="_blank">profile</a>`;
       if (key==='stage') {
         const s = stageOf(r);
         v = `<span class="badge stage-${s}">${s || '—'}</span>`;
@@ -208,15 +208,6 @@ function renderTable(rows){
 
   container.innerHTML = html;
   container.dataset.renderedRows = rows.length;
-}
-
-function renderKpis(k){
-  document.getElementById('k_total').textContent = k.total;
-  document.getElementById('k_p1').textContent = k.p1;
-  document.getElementById('k_p2').textContent = k.p2;
-  document.getElementById('k_p2pro').textContent = k.p2pro;
-  document.getElementById('k_p3').textContent = k.p3;
-  document.getElementById('k_rep').textContent = k.replied;
 }
 
 function renderTabs(rows){
@@ -248,19 +239,18 @@ function renderTabs(rows){
     };
     el.appendChild(btn);
   });
-
-  // programový klik na „All“
   if (el.firstChild) el.firstChild.click();
 }
 
-/* ---------- init ---------- */
+function escapeHTML(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* init */
 (async function init(){
   try{
     const rows = await loadCSV(CSV_URL);
     renderKpis(countKPIs(rows));
     renderTabs(rows);
-    // záloha: priame zobrazenie všetkých
-    renderTable(rows);
+    renderTable(rows); // fallback
     const rendered = Number(document.getElementById('view').dataset.renderedRows || 0);
     if (!rendered && rows.length){
       console.warn('Rendered 0 rows, forcing render again.');
