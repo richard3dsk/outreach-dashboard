@@ -31,6 +31,8 @@
     .notice { background:#fff; border:1px solid #fde68a; border-left:6px solid #f59e0b; padding:14px; border-radius:10px; }
     .footer { color:#9ca3af; font-size:12px; margin-top:32px; }
     a.link { color:#2563eb; text-decoration:none; }
+    details.debug { margin-top:24px; }
+    pre { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; overflow:auto; }
   </style>
 </head>
 <body>
@@ -51,17 +53,22 @@
     <nav class="tabs" id="tabs"></nav>
     <section id="view"></section>
 
+    <details class="debug">
+      <summary>Debug</summary>
+      <div id="dbg"></div>
+    </details>
+
     <div class="footer">© 3D.sk – Outreach. Data source: Google Sheets (Contacts_Public CSV). Credentials for Pro accounts are never exposed here.</div>
   </main>
 
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZOSOSxfS-YBKi0GNNDJ4FkwX1yNkg47Wivbb1936rkHiFabJ98rerOsOEdlZ2WFzxr2R5J0ZWWp2p/pub?gid=0&single=true&output=csv";
 
-/* ---------------- CSV loader (robust) ---------------- */
+/* ---------------- CSV loader (robust + fallback) ---------------- */
 async function loadCSV(url){
   const res = await fetch(url, { cache: "no-store" });
   let text = await res.text();
-  text = text.replace(/^\uFEFF/, ""); // strip BOM
+  text = text.replace(/^\uFEFF/, "");
 
   const lines = text.trim().split(/\r?\n/);
   const headerLine = lines.shift() || "";
@@ -101,8 +108,15 @@ async function loadCSV(url){
     return obj;
   });
 
-  // Debug pre prípad potreby
-  // console.log({headersRaw, map, rows});
+  // Zapíš do debug panelu
+  const dbg = document.getElementById('dbg');
+  if (dbg) {
+    dbg.innerHTML =
+      `<p><b>headersRaw</b>: ${escapeHTML(JSON.stringify(headersRaw))}</p>` +
+      `<p><b>map</b>: ${escapeHTML(JSON.stringify(map))}</p>` +
+      `<p><b>rows.length</b>: ${rows.length}</p>` +
+      (rows[0] ? `<pre>${escapeHTML(JSON.stringify(rows[0], null, 2))}</pre>` : '');
+  }
 
   return rows;
 }
@@ -125,6 +139,8 @@ function parseCSVLine(line){
   out.push(cur);
   return out;
 }
+
+function escapeHTML(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
 function countKPIs(rows){
   const total = rows.length;
@@ -161,26 +177,54 @@ function renderTable(rows){
     ['reply1_at','Reply1 at'],['reply1_note','Reply1 note'],['reply2_at','Reply2 at'],['reply2_note','Reply2 note'],
     ['reply3_at','Reply3 at'],['reply3_note','Reply3 note'],['template_set','Template']
   ];
-  let html = '<div class="card" style="overflow:auto">\n<table><thead><tr>' +
-    cols.map(c=>`<th>${c[1]}</th>`).join('') +
-    '</tr></thead><tbody>';
+
+  const container = document.getElementById('view');
+  container.innerHTML = '';
+  const wrapper = document.createElement('div');
+  wrapper.className = 'card';
+  wrapper.style.overflow = 'auto';
+
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const trh = document.createElement('tr');
+  cols.forEach(([,label])=>{
+    const th = document.createElement('th');
+    th.textContent = label;
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
 
   rows.forEach((r, idx) => {
-    html += '<tr>';
-    cols.forEach(([k]) => {
-      let v = r[k];
-      if (k==='id') v = safe(v, String(idx+1));            // fallback na poradové číslo
-      if (k==='full_name') v = safe(v, '(no name)');
-      if (k==='linkedin_url' && v) v = `<a class="link" href="${v}" target="_blank">profile</a>`;
-      if (k==='stage') v = fmtStage(v);
-      if (v == null) v = '';
-      html += `<td>${v}</td>`;
+    const tr = document.createElement('tr');
+    cols.forEach(([key])=>{
+      let v = r[key];
+      if (key==='id') v = safe(v, String(idx+1));
+      if (key==='full_name') v = safe(v, '(no name)');
+      const td = document.createElement('td');
+      if (key==='linkedin_url' && v){
+        const a = document.createElement('a');
+        a.href = v; a.target = '_blank'; a.className='link'; a.textContent='profile';
+        td.appendChild(a);
+      } else if (key==='stage'){
+        td.innerHTML = fmtStage(v);
+      } else {
+        td.textContent = v || '';
+      }
+      tr.appendChild(td);
     });
-    html += '</tr>';
+    tbody.appendChild(tr);
   });
 
-  html += '</tbody></table></div>';
-  document.getElementById('view').innerHTML = html;
+  table.appendChild(tbody);
+  wrapper.appendChild(table);
+  container.appendChild(wrapper);
+
+  if (!rows.length){
+    container.innerHTML = '<div class="card">No rows to display.</div>';
+  }
 }
 
 function renderTabs(rows){
@@ -223,7 +267,7 @@ function renderTabs(rows){
     renderTabs(rows);
     renderTable(rows);
   }catch(err){
-    document.getElementById('view').innerHTML = `<div class="notice"><b>Failed to load data.</b><br>${err}</div>`;
+    document.getElementById('view').innerHTML = `<div class="notice"><b>Failed to load data.</b><br>${escapeHTML(err)}</div>`;
     console.error(err);
   }
 })();
