@@ -57,31 +57,48 @@
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZOSOSxfS-YBKi0GNNDJ4FkwX1yNkg47Wivbb1936rkHiFabJ98rerOsOEdlZ2WFzxr2R5J0ZWWp2p/pub?gid=0&single=true&output=csv";
 
-/* --- CSV loader with header normalization (fixes empty table) --- */
+/* --- Robustné načítanie CSV s mapovaním hlavičiek na kanonické názvy --- */
 async function loadCSV(url){
   const res = await fetch(url, { cache: "no-store" });
   let text = await res.text();
 
-  // strip BOM if present
+  // odstráň BOM
   text = text.replace(/^\uFEFF/, "");
 
   const lines = text.trim().split(/\r?\n/);
   const headerLine = lines.shift() || "";
   const headersRaw = parseCSVLine(headerLine);
 
-  // normalize headers: remove quotes/BOM, trim, lowercase
-  const headers = headersRaw.map(h =>
-    String(h).replace(/^"|"$/g, "")
-             .replace(/\uFEFF/g, "")
-             .trim()
-             .toLowerCase()
-  );
+  // kanonické kľúče, ktoré používame v aplikácii
+  const canonical = [
+    "id","full_name","first_name","role","linkedin_url","stage",
+    "sent_phase1_at","sent_phase2_at","sent_phase3_at",
+    "reply1_at","reply1_note","reply2_at","reply2_note","reply3_at","reply3_note",
+    "template_set","evidence"
+  ];
+
+  // normalizačná funkcia (lowercase, bez ne-alfanumerických znakov a podčiarkovníkov)
+  const norm = s => String(s)
+    .replace(/\uFEFF/g,"")
+    .replace(/^"|"$/g,"")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g,""); // odstráni medzery, pomlčky, atď.
+
+  const canonicalMap = new Map(canonical.map(k => [norm(k), k]));
+
+  // namapuj index -> kanonický kľúč (ak nájdeme zhodu)
+  const mapIndexToKey = headersRaw.map(h => {
+    const n = norm(h);
+    return canonicalMap.get(n) || null;
+  });
 
   const rows = lines.map(parseCSVLine).map(cols => {
     const obj = {};
-    headers.forEach((h, i) => {
+    mapIndexToKey.forEach((key, i) => {
+      if (!key) return; // neznáma hlavička – ignoruj
       const v = (cols[i] ?? "").replace(/^"|"$/g, "");
-      obj[h] = v;
+      obj[key] = v;
     });
     return obj;
   });
@@ -89,7 +106,7 @@ async function loadCSV(url){
   return rows;
 }
 
-/* CSV line parser that respects quoted commas */
+/* CSV line parser, rešpektuje čiarky v úvodzovkách */
 function parseCSVLine(line){
   const out = []; let cur = ''; let q=false;
   for (let i=0;i<line.length;i++){
