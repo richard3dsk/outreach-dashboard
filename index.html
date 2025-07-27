@@ -64,7 +64,14 @@
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZOSOSxfS-YBKi0GNNDJ4FkwX1yNkg47Wivbb1936rkHiFabJ98rerOsOEdlZ2WFzxr2R5J0ZWWp2p/pub?gid=0&single=true&output=csv";
 
-/* ---------- CSV loader (robust + fallback) ---------- */
+const normStr = s => String(s ?? "")
+  .replace(/\uFEFF/g,"")
+  .trim();
+
+const stageOf = r => normStr(r.stage).toLowerCase();
+const tmplOf  = r => (normStr(r.template_set).toLowerCase() || 'original');
+
+/* ---------- CSV loader (robust + fallback + trim) ---------- */
 async function loadCSV(url){
   const res = await fetch(url, { cache: "no-store" });
   let text = await res.text();
@@ -81,15 +88,9 @@ async function loadCSV(url){
     "template_set","evidence"
   ];
 
-  const norm = s => String(s)
-    .replace(/\uFEFF/g,"")
-    .replace(/^"|"$/g,"")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9_]+/g,"");
-
-  const canonicalMap = new Map(canonical.map(k => [norm(k), k]));
-  const mapByName = headersRaw.map(h => canonicalMap.get(norm(h)) || null);
+  const normHeader = s => normStr(s).toLowerCase().replace(/[^a-z0-9_]+/g,"");
+  const canonicalMap = new Map(canonical.map(k => [normHeader(k), k]));
+  const mapByName = headersRaw.map(h => canonicalMap.get(normHeader(h)) || null);
 
   const matched = mapByName.filter(Boolean).length;
   const useOrderFallback = matched < Math.ceil(headersRaw.length * 0.5);
@@ -101,7 +102,9 @@ async function loadCSV(url){
     const obj = {};
     map.forEach((key, i) => {
       if (!key) return;
-      const v = (cols[i] ?? "").replace(/^"|"$/g, "");
+      let v = (cols[i] ?? "");
+      v = v.replace(/^"|"$/g, "");
+      v = normStr(v);                // <<< kľúčové: trim + odstránenie BOM
       obj[key] = v;
     });
     return obj;
@@ -110,10 +113,19 @@ async function loadCSV(url){
   // Debug info
   const dbg = document.getElementById('dbg');
   if (dbg) {
+    const counts = {
+      queued: rows.filter(r=>stageOf(r)==='queued').length,
+      p1:     rows.filter(r=>stageOf(r)==='phase1_sent').length,
+      p2o:    rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='original').length,
+      p2p:    rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='pro').length,
+      p3:     rows.filter(r=>stageOf(r)==='phase3_sent').length,
+      replied:rows.filter(r=>stageOf(r)==='replied').length,
+    };
     dbg.innerHTML =
       `<p><b>headersRaw</b>: ${escapeHTML(JSON.stringify(headersRaw))}</p>` +
       `<p><b>map</b>: ${escapeHTML(JSON.stringify(map))}</p>` +
       `<p><b>rows.length</b>: ${rows.length}</p>` +
+      `<p><b>counts</b>: ${escapeHTML(JSON.stringify(counts))}</p>` +
       (rows[0] ? `<pre>${escapeHTML(JSON.stringify(rows[0], null, 2))}</pre>` : '');
   }
 
@@ -143,16 +155,16 @@ function escapeHTML(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;',
 
 function countKPIs(rows){
   const total = rows.length;
-  const p1 = rows.filter(r=>r.stage==='phase1_sent').length;
-  const p2 = rows.filter(r=>r.stage==='phase2_sent' && (r.template_set||'original')==='original').length;
-  const p2pro = rows.filter(r=>r.stage==='phase2_sent' && r.template_set==='pro').length;
-  const p3 = rows.filter(r=>r.stage==='phase3_sent').length;
-  const replied = rows.filter(r=>r.stage==='replied').length;
+  const p1 = rows.filter(r=>stageOf(r)==='phase1_sent').length;
+  const p2 = rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='original').length;
+  const p2pro = rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='pro').length;
+  const p3 = rows.filter(r=>stageOf(r)==='phase3_sent').length;
+  const replied = rows.filter(r=>stageOf(r)==='replied').length;
   return { total, p1, p2, p2pro, p3, replied };
 }
 
 function fmtStage(stage){
-  const s = stage || '';
+  const s = stageOf({stage});
   return `<span class="badge stage-${s}">${s || '—'}</span>`;
 }
 function safe(v, fallback=''){ return (v && String(v).trim().length ? v : fallback); }
@@ -205,7 +217,7 @@ function renderTable(rows){
         a.href = v; a.target = '_blank'; a.className='link'; a.textContent='profile';
         td.appendChild(a);
       } else if (key==='stage'){
-        td.innerHTML = fmtStage(v);
+        td.innerHTML = fmtStage(r.stage);
       } else {
         td.textContent = v || '';
       }
@@ -242,20 +254,18 @@ function renderTabs(rows){
       [...el.children].forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       let filtered = rows;
-      if (t.id==='queued') filtered = rows.filter(r=>r.stage==='queued');
-      if (t.id==='p1') filtered = rows.filter(r=>r.stage==='phase1_sent');
-      if (t.id==='p2o') filtered = rows.filter(r=>r.stage==='phase2_sent' && (r.template_set||'original')==='original');
-      if (t.id==='p2p') filtered = rows.filter(r=>r.stage==='phase2_sent' && r.template_set==='pro');
-      if (t.id==='p3') filtered = rows.filter(r=>r.stage==='phase3_sent');
-      if (t.id==='replied') filtered = rows.filter(r=>r.stage==='replied');
+      if (t.id==='queued') filtered = rows.filter(r=>stageOf(r)==='queued');
+      if (t.id==='p1')     filtered = rows.filter(r=>stageOf(r)==='phase1_sent');
+      if (t.id==='p2o')    filtered = rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='original');
+      if (t.id==='p2p')    filtered = rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='pro');
+      if (t.id==='p3')     filtered = rows.filter(r=>stageOf(r)==='phase3_sent');
+      if (t.id==='replied')filtered = rows.filter(r=>stageOf(r)==='replied');
       renderTable(filtered);
     };
     el.appendChild(btn);
   });
 
-  /* Hlavná oprava: spusti prvý filter klikom,
-     aby sa tabuľka vykreslila hneď po načítaní. */
-  if (el.firstChild) el.firstChild.click();
+  if (el.firstChild) el.firstChild.click(); // spusti hneď
 }
 
 /* ---------- init ---------- */
@@ -263,7 +273,7 @@ function renderTabs(rows){
   try{
     const rows = await loadCSV(CSV_URL);
     renderKpis(countKPIs(rows));
-    renderTabs(rows);           // .click() spustí prvé vykreslenie
+    renderTabs(rows);
   }catch(err){
     document.getElementById('view').innerHTML =
       `<div class="notice"><b>Failed to load data.</b><br>${escapeHTML(err)}</div>`;
