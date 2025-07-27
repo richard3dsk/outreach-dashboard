@@ -1,826 +1,173 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LinkedIn Outreach Dashboard</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>3D.sk – Outreach Dashboard</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f7f9fc;
-      color: #333;
-    }
-    header {
-      background-color: #fff;
-      padding: 1.5rem 1rem 1rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      text-align: center;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 2rem;
-      color: #1a73e8;
-    }
-    header p {
-      margin: 0.5rem 0 1rem;
-      color: #555;
-    }
-    /* Top stats bar */
-    .top-stats {
-      display: flex;
-      justify-content: center;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-      margin-bottom: 1rem;
-    }
-    .stat-item {
-      display: flex;
-      align-items: center;
-      font-size: 0.9rem;
-      color: #555;
-    }
-    .stat-item span {
-      font-weight: bold;
-      color: #1a73e8;
-      margin-right: 0.25rem;
-    }
-    /* Navigation tabs */
-    .tabs {
-      display: flex;
-      justify-content: center;
-      background-color: #e9eff6;
-      border-bottom: 1px solid #d7e2ee;
-    }
-    .tabs button {
-      flex: 1;
-      padding: 0.75rem 1rem;
-      border: none;
-      background: none;
-      font-size: 1rem;
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      transition: background-color 0.2s, border-bottom-color 0.2s;
-    }
-    .tabs button:hover {
-      background-color: #dce6f3;
-    }
-    .tabs button.active {
-      border-bottom-color: #1a73e8;
-      background-color: #f5f9ff;
-      font-weight: bold;
-    }
-    /* Section styling */
-    .section {
-      display: none;
-      padding: 1rem;
-    }
-    .section.active {
-      display: block;
-    }
-    /* Overview section */
-    .phases {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    .phase-box {
-      flex: 1;
-      min-width: 260px;
-      background-color: #fff;
-      border-radius: 8px;
-      padding: 1rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      text-align: center;
-    }
-    .phase-box h3 {
-      margin: 0;
-      font-size: 1.25rem;
-      margin-bottom: 0.5rem;
-    }
-    .phase-box p {
-      margin: 0;
-      font-size: 0.9rem;
-      color: #666;
-    }
-    .phase-box .count {
-      font-size: 2rem;
-      margin: 0.5rem 0;
-      font-weight: bold;
-    }
-    /* Cards grid for websites */
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1rem;
-    }
-    .card {
-      background-color: #fff;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .card h4 {
-      margin: 0 0 0.25rem;
-      color: #1a73e8;
-      font-size: 1.1rem;
-    }
-    .card a {
-      color: #0a66c2;
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
-    .card ul {
-      margin: 0.5rem 0 0;
-      padding-left: 1rem;
-      list-style-type: disc;
-      color: #555;
-      font-size: 0.85rem;
-    }
-    /* Strategy columns */
-    .strategy-cols {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    .strategy-col {
-      flex: 1;
-      min-width: 240px;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      padding: 1rem;
-    }
-    .strategy-col h4 {
-      margin-top: 0;
-      color: #1a73e8;
-    }
-    .strategy-col ul {
-      padding-left: 1rem;
-      list-style: disc;
-      font-size: 0.9rem;
-      color: #555;
-    }
-    /* Templates */
-    .template-block {
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      margin-bottom: 1.5rem;
-      padding: 1rem;
-    }
-    .template-block h4 {
-      margin-top: 0;
-      color: #1a73e8;
-    }
-    .template-block pre {
-      white-space: pre-wrap;
-      font-family: inherit;
-      background-color: #f5f5f5;
-      padding: 0.75rem;
-      border-radius: 4px;
-      overflow-x: auto;
-      font-size: 0.9rem;
-    }
-    /* Contact tracker */
-    .tracker-summary {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      margin-bottom: 1rem;
-    }
-    .tracker-summary .summary-box {
-      flex: 1;
-      min-width: 160px;
-      background-color: #fff;
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-      text-align: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .tracker-summary .summary-box h2 {
-      margin: 0;
-      font-size: 1.6rem;
-      color: #1a73e8;
-    }
-    .tracker-summary .summary-box p {
-      margin: 0;
-      font-size: 0.8rem;
-      color: #666;
-    }
-    /* Sub tabs for tracker */
-    .subtabs {
-      display: flex;
-      gap: 0;
-      border-bottom: 1px solid #d7e2ee;
-      margin-bottom: 1rem;
-    }
-    .subtabs button {
-      flex: 1;
-      padding: 0.5rem;
-      border: none;
-      background: none;
-      font-size: 0.9rem;
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-    }
-    .subtabs button.active {
-      border-bottom-color: #1a73e8;
-      font-weight: bold;
-      background-color: #f5f9ff;
-    }
-    .tracker-section {
-      display: none;
-    }
-    .tracker-section.active {
-      display: block;
-    }
-    /* Contact list table */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: #fff;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    table th, table td {
-      padding: 0.5rem 0.5rem;
-      border-bottom: 1px solid #f1f1f1;
-      font-size: 0.85rem;
-    }
-    table th {
-      background-color: #f5f9ff;
-      text-align: left;
-    }
-    table tr:last-child td {
-      border-bottom: none;
-    }
-    table input, table select {
-      width: 100%;
-      padding: 0.25rem;
-      font-size: 0.85rem;
-    }
-    /* Form for add */
-    .add-form {
-      background-color: #fff;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .add-form label {
-      display: block;
-      margin-top: 0.5rem;
-      font-size: 0.85rem;
-      color: #444;
-    }
-    .add-form input, .add-form textarea, .add-form select {
-      width: 100%;
-      padding: 0.5rem;
-      margin-top: 0.25rem;
-      font-size: 0.9rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    .add-form button {
-      margin-top: 1rem;
-      padding: 0.5rem 1rem;
-      font-size: 0.9rem;
-      background-color: #1a73e8;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .export-section {
-      text-align: center;
-      background-color: #fff;
-      padding: 2rem 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .export-section button {
-      margin-top: 1rem;
-      padding: 0.5rem 1rem;
-      font-size: 0.9rem;
-      background-color: #1a73e8;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .export-section ul {
-      margin-top: 1rem;
-      list-style: disc;
-      padding-left: 1.25rem;
-      color: #555;
-      font-size: 0.85rem;
-    }
+    :root { --gap: 16px; --pad: 20px; font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    body { margin: 0; color: #111; background: #fafafa; }
+    header { padding: var(--pad); background: #fff; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 10; }
+    h1 { font-size: 24px; margin: 0 0 6px; }
+    .sub { color:#6b7280; font-size: 14px; }
+    main { max-width: 1200px; margin: 0 auto; padding: var(--pad); }
+    .grid { display: grid; gap: var(--gap); }
+    .cards { grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); }
+    .card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:18px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .kpi { font-size: 34px; font-weight: 700; margin: 8px 0 0; }
+    .muted { color:#6b7280; font-size: 13px; }
+    nav.tabs { display:flex; gap:8px; margin: 24px 0; flex-wrap: wrap; }
+    nav.tabs button { border:1px solid #e5e7eb; background:#fff; padding:10px 14px; border-radius:10px; cursor:pointer; }
+    nav.tabs button.active { background:#111; color:#fff; border-color:#111; }
+    table { width:100%; border-collapse: collapse; font-size:14px; }
+    th, td { border-bottom: 1px solid #f0f0f0; padding:10px; text-align:left; vertical-align: top; }
+    th { background:#fcfcfc; position: sticky; top: 64px; z-index: 5; }
+    .badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid #e5e7eb; }
+    .stage-queued { background:#fff7ed; border-color:#fdba74; }
+    .stage-phase1_sent { background:#eef2ff; border-color:#c7d2fe; }
+    .stage-phase2_sent { background:#ecfeff; border-color:#a5f3fc; }
+    .stage-phase3_sent { background:#f0fdf4; border-color:#bbf7d0; }
+    .stage-replied { background:#ecfdf5; border-color:#6ee7b7; }
+    .notice { background:#fff; border:1px solid #fde68a; border-left:6px solid #f59e0b; padding:14px; border-radius:10px; }
+    .footer { color:#9ca3af; font-size:12px; margin-top:32px; }
+    a.link { color:#2563eb; text-decoration:none; }
   </style>
 </head>
 <body>
   <header>
-    <h1>LinkedIn Outreach Dashboard</h1>
-    <p>Psychological Approach to Building Relationships and Increasing Conversions</p>
-    <div class="top-stats">
-      <div class="stat-item"><span>16 427</span> LinkedIn Connections</div>
-      <div class="stat-item"><span>🎨</span> Artist Community Focus</div>
-      <div class="stat-item"><span>🚀</span> Conversion Optimization</div>
-    </div>
+    <h1>3D.sk Outreach Dashboard</h1>
+    <div class="sub">Live data from Google Sheets → Contacts_Public (read-only). Messages in EN. Limits: 30 Phase 1/day, 60–120 s pauses.</div>
   </header>
-  <div class="tabs">
-    <button data-tab="overview" class="active">Overview</button>
-    <button data-tab="websites">Websites</button>
-    <button data-tab="strategy">Strategy</button>
-    <button data-tab="templates">Templates</button>
-    <button data-tab="tracker">Contact Tracker</button>
-  </div>
-  <div id="overview" class="section active">
-    <h2>Communication Phases</h2>
-    <div class="phases">
-      <div class="phase-box" style="background-color:#e8f0fe;">
-        <div class="count" id="phase-count-first">1</div>
-        <h3>First Contact</h3>
-        <p>Friendly conversation starter</p>
-      </div>
-      <div class="phase-box" style="background-color:#e9f7ef;">
-        <div class="count" id="phase-count-value">0</div>
-        <h3>Value Offering</h3>
-        <p>Free account with credits</p>
-      </div>
-      <div class="phase-box" style="background-color:#f6eefb;">
-        <div class="count" id="phase-count-follow">0</div>
-        <h3>Follow-up</h3>
-        <p>Valuable content sharing</p>
-      </div>
-      <div class="phase-box" style="background-color:#e9f7f2;">
-        <div class="count" id="phase-count-accounts">0</div>
-        <h3>Free Accounts</h3>
-        <p>Number of accounts created</p>
-      </div>
-    </div>
-    <h2>Target Audience</h2>
-    <p>Primary customer segments for our platforms</p>
-    <div class="phases" style="flex-wrap: wrap;">
-      <span class="phase-box" style="min-width:120px;background:#fff;box-shadow:none;">3D Artists &amp; Modelers</span>
-      <span class="phase-box" style="min-width:120px;background:#fff;box-shadow:none;">Game Developers</span>
-      <span class="phase-box" style="min-width:120px;background:#fff;box-shadow:none;">Film &amp; VFX Creators</span>
-      <span class="phase-box" style="min-width:120px;background:#fff;box-shadow:none;">Illustrators</span>
-      <span class="phase-box" style="min-width:120px;background:#fff;box-shadow:none;">Comic Artists</span>
-      <span class="phase-box" style="min-width:120px;background:#fff;box-shadow:none;">Sculptors</span>
-      <span class="phase-box" style="min-width:120px;background:#fff;box-shadow:none;">Digital Art Students</span>
-    </div>
-    <h2>Psychological Principles</h2>
-    <ul>
-      <li><strong>Reciprocity:</strong> Offer value before asking.</li>
-      <li><strong>Social Proof:</strong> Leverage community and testimonials.</li>
-      <li><strong>Scarcity:</strong> Limited free accounts create urgency.</li>
-      <li><strong>Authority:</strong> Demonstrate expertise through content.</li>
-      <li><strong>Consistency:</strong> Build trust through regular follow-up.</li>
-    </ul>
-  </div>
-  <div id="websites" class="section">
-    <h2>Websites a zdroje</h2>
-    <p>Selected websites providing valuable resources for artists and creators.</p>
-    <div class="card-grid">
-      <div class="card">
-        <h4>3D.sk</h4>
-        <a href="https://www.3d.sk" target="_blank">www.3d.sk</a>
-        <p>Extensive collection of 3D and 2D references for artists, game developers, and filmmakers.</p>
-        <ul>
-          <li>3D body scans</li>
-          <li>2D anatomical references</li>
-          <li>High-resolution textures</li>
-          <li>Scans of professional equipment</li>
-        </ul>
-      </div>
-      <div class="card">
-        <h4>Female Anatomy for Artists</h4>
-        <a href="https://www.female-anatomy-for-artist.com" target="_blank">female-anatomy-for-artist.com</a>
-        <p>Ultra-high resolution female photographic references for artists.</p>
-        <ul>
-          <li>Academic poses</li>
-          <li>Pin-up poses</li>
-          <li>Video references</li>
-          <li>Multi-angle studies</li>
-        </ul>
-      </div>
-      <div class="card">
-        <h4>Human Anatomy for Artists</h4>
-        <a href="https://www.human-anatomy-for-artist.com" target="_blank">human-anatomy-for-artist.com</a>
-        <p>Comprehensive anatomical references focused on male models and various types of poses.</p>
-        <ul>
-          <li>Realistic poses</li>
-          <li>Dynamic poses</li>
-          <li>Stereoscopic poses</li>
-          <li>Academic studies</li>
-        </ul>
-      </div>
-      <div class="card">
-        <h4>Environment Textures</h4>
-        <a href="https://www.environment-textures.com" target="_blank">environment-textures.com</a>
-        <p>High-resolution textures pre 3D umelcov a vývojárov hier.</p>
-        <ul>
-          <li>Landscape textures</li>
-          <li>Material references</li>
-          <li>HDR backgrounds</li>
-          <li>HDRI collections</li>
-        </ul>
-      </div>
-      <div class="card">
-        <h4>Photo Reference for Comic Artists</h4>
-        <a href="https://www.photo-reference-for-comic-artists.com" target="_blank">photo-reference-for-comic-artists.com</a>
-        <p>Photographic references and textures specifically for comic artists.</p>
-        <ul>
-          <li>Action poses</li>
-          <li>Facial expressions</li>
-          <li>Various character types</li>
-          <li>Dynamic movements</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-  <div id="strategy" class="section">
-    <h2>Implementation Strategy</h2>
-    <p>Step-by-step approach for LinkedIn outreach.</p>
-    <div class="strategy-cols">
-      <div class="strategy-col">
-        <h4>Phase 1: Relationship Building</h4>
-        <ul>
-          <li>Send friendly, non-salesy messages</li>
-          <li>Ask about their current projects</li>
-          <li>Show genuine interest in their work</li>
-          <li>Wait 3–5 days for a response</li>
-        </ul>
-      </div>
-      <div class="strategy-col">
-        <h4>Phase 2: Value Offering</h4>
-        <ul>
-          <li>Respond to their project details</li>
-          <li>Introduce the free account option</li>
-          <li>Highlight the “no strings attached” approach</li>
-          <li>Create an account if they respond positively</li>
-        </ul>
-      </div>
-      <div class="strategy-col">
-        <h4>Phase 3: Content Sharing</h4>
-        <ul>
-          <li>Share presentations and materials</li>
-          <li>Provide valuable resources</li>
-          <li>Leave a “trail” for future references</li>
-          <li>Maintain a professional relationship</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-  <div id="templates" class="section">
-    <h2>Message Templates</h2>
-    <div class="template-block">
-      <h4>Phase 1: First Contact</h4>
-      <p>Begin a friendly conversation without pressure to sell</p>
-      <pre>
-Dear [Contact Name] :)
+  <main>
+    <section class="grid cards" id="kpis">
+      <div class="card"><div class="muted">Contacts total</div><div class="kpi" id="k_total">–</div></div>
+      <div class="card"><div class="muted">Phase 1 sent</div><div class="kpi" id="k_p1">–</div></div>
+      <div class="card"><div class="muted">Phase 2 sent (Original)</div><div class="kpi" id="k_p2">–</div></div>
+      <div class="card"><div class="muted">Phase 2 sent (Pro)</div><div class="kpi" id="k_p2pro">–</div></div>
+      <div class="card"><div class="muted">Phase 3 sent</div><div class="kpi" id="k_p3">–</div></div>
+      <div class="card"><div class="muted">Replies</div><div class="kpi" id="k_rep">–</div></div>
+    </section>
 
-I hope you're doing well. I was impressed by your profile and work in [specific area, e.g. 3D graphics, illustration].
+    <nav class="tabs" id="tabs"></nav>
+    <section id="view"></section>
 
-Are you currently working on any interesting projects? I always enjoy seeing what talented artists like you are creating.
+    <div class="footer">© 3D.sk – Outreach. Data source: Google Sheets (Contacts_Public CSV). Credentials for Pro accounts are never exposed here.</div>
+  </main>
 
-Best regards,
-The 3D.sk Team
-      </pre>
-    </div>
-    <div class="template-block">
-      <h4>Phase 2: Value Offering</h4>
-      <p>Continue the conversation and offer a free account</p>
-      <pre>
-Thank you for your reply! That sounds like a very interesting project. [Brief reaction to their project, if mentioned].
+<script>
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZOSOSxfS-YBKi0GNNDJ4FkwX1yNkg47Wivbb1936rkHiFabJ98rerOsOEdlZ2WFzxr2R5J0ZWWp2p/pub?gid=0&single=true&output=csv";
 
-Since we’re in touch, I thought you might be interested to know that we’re currently opening our platforms (3D.sk, Anatomy for Artists and others) to a broader artist community and we have several free accounts with credits available. It’s a great opportunity to explore our extensive libraries of references and textures with no obligations.
-
-Would you be interested in such an account? I’d be happy to set it up for you.
-
-Best regards,
-The 3D.sk Team
-      </pre>
-    </div>
-    <div class="template-block">
-      <h4>Phase 3: Follow-up</h4>
-      <p>Re-engage unresponsive contacts and share valuable content</p>
-      <pre>
-Dear [Contact Name] :)
-
-I hope you’re having a successful week. I just wanted to reach out and share something you might find interesting.
-
-We’ve prepared presentations and showcases from our platforms that demonstrate how our references and textures can help artists speed up creation and achieve better results:
-
-• 3D.sk product overview: https://bit.ly/3DskPresentation
-• Categories of 3D scans and technical details: [link to presentation]
-
-If you have any questions or would like to gain access to our free resources, let me know.
-
-Best regards,
-The 3D.sk Team
-      </pre>
-    </div>
-  </div>
-  <div id="tracker" class="section">
-    <h2>Contact Tracker & Management</h2>
-    <p>Track your LinkedIn contacts and communication phases.</p>
-    <div class="tracker-summary">
-      <div class="summary-box" style="background-color:#e8f0fe;">
-        <h2 id="sum-first">0</h2>
-        <p>First Contact</p>
-      </div>
-      <div class="summary-box" style="background-color:#e9f7ef;">
-        <h2 id="sum-value">0</h2>
-        <p>Value Offering</p>
-      </div>
-      <div class="summary-box" style="background-color:#f6eefb;">
-        <h2 id="sum-follow">0</h2>
-        <p>Follow-up</p>
-      </div>
-      <div class="summary-box" style="background-color:#e9f7f2;">
-        <h2 id="sum-accounts">0</h2>
-        <p>Free Accounts</p>
-      </div>
-    </div>
-    <div class="subtabs">
-      <button data-subtab="list" class="active">Contact List</button>
-      <button data-subtab="add">Add Contact</button>
-      <button data-subtab="export">Export Data</button>
-    </div>
-    <div id="sub-list" class="tracker-section active">
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Info</th>
-            <th>Stage</th>
-            <th>First Contact</th>
-            <th>Next Contact</th>
-            <th>Message</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="tracker-body">
-          <!-- contacts will be rendered here -->
-        </tbody>
-      </table>
-    </div>
-    <div id="sub-add" class="tracker-section">
-      <div class="add-form">
-        <label>Name
-          <input type="text" id="add-name" placeholder="Celé meno" required>
-        </label>
-        <label>Info
-          <input type="text" id="add-info" placeholder="Pozícia / špecializácia">
-        </label>
-        <label>Stage
-          <select id="add-stage">
-            <option value="first">First Contact</option>
-            <option value="value">Value Offering</option>
-            <option value="follow">Follow-up</option>
-<option value="account">Free Account</option>
-          </select>
-        </label>
-        <label>First Contact Date
-          <input type="date" id="add-first-date">
-        </label>
-        <label>Next Contact Date
-          <input type="date" id="add-next-date">
-        </label>
-        <label>Message
-          <textarea id="add-message" rows="3" placeholder="Note or message"></textarea>
-        </label>
-        <button id="btn-add-contact">Add</button>
-      </div>
-    </div>
-    <div id="sub-export" class="tracker-section">
-      <div class="export-section">
-        <h3>Export contacts to CSV</h3>
-        <p>Download all contacts including notes and dates in CSV format.</p>
-        <button id="btn-export">Download CSV</button>
-        <ul>
-<li>Name and artist info</li>
-          <li>Current stage and contact dates</li>
-          <li>Notes and messages</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-  <script>
-    // Tab switching
-    const tabButtons = document.querySelectorAll('.tabs button');
-    const sections = document.querySelectorAll('.section');
-    tabButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        tabButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        sections.forEach(sec => sec.classList.remove('active'));
-        const target = document.getElementById(btn.dataset.tab);
-        if (target) target.classList.add('active');
-      });
-    });
-    // Subtab switching for tracker
-    const subButtons = document.querySelectorAll('.subtabs button');
-    const subSections = document.querySelectorAll('.tracker-section');
-    subButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        subButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        subSections.forEach(sec => sec.classList.remove('active'));
-        const subTarget = document.getElementById('sub-' + btn.dataset.subtab);
-        if (subTarget) subTarget.classList.add('active');
-      });
-    });
-    // Contact tracker data
-    const trackerKey = 'outreach-dashboard-contacts';
-    
-const initialContacts = [{"name": "Stanislav Todirash", "info": "Art Manager | Lead 3D Artist", "stage": "first", "firstDate": "2025-07-22", "nextDate": "2025-07-27", "message": ""}, {"name": "Muhammad Basyouni", "info": "Lead 3D Artist | Optimizing Workflows", "stage": "first", "firstDate": "2025-07-22", "nextDate": "2025-07-27", "message": ""}, {"name": "Ben Siebmann", "info": "3D Artist | Character Designer", "stage": "first", "firstDate": "2025-07-22", "nextDate": "2025-07-27", "message": ""}, {"name": "Ilia Surin", "info": "Senior 3D Artist | Environment Design", "stage": "first", "firstDate": "2025-07-22", "nextDate": "2025-07-27", "message": ""}, {"name": "Jean Luc Maynard", "info": "Concept Artist | Digital Sculptor", "stage": "first", "firstDate": "2025-07-22", "nextDate": "2025-07-27", "message": ""}, {"name": "Shuruq Tramontini", "info": "3D Modeler | Texture Artist", "stage": "first", "firstDate": "2025-07-22", "nextDate": "2025-07-27", "message": ""}, {"name": "VivekRaj Bara", "info": "3D Artist | Animation Specialist", "stage": "first", "firstDate": "2025-07-22", "nextDate": "2025-07-27", "message": ""}, {"name": "Oleksandr Pushkaruk", "info": "Senior 3D Artist | Technical Artist", "stage": "first", "firstDate": "2025-07-22", "nextDate": "2025-07-27", "message": ""}, {"name": "Manuel Palme", "info": "3D Artist | Lighting Specialist", "stage": "first", "firstDate": "2025-07-22", "nextDate": "2025-07-27", "message": ""}, {"name": "Zakaria Taleb Hacine", "info": "3D Artist | Game Asset Creator", "stage": "first", "firstDate": "2025-07-22", "nextDate": "2025-07-27", "message": ""}];
-let contactData = [];
-function loadTracker() {
-  const stored = localStorage.getItem(trackerKey);
-  if (stored) {
-    try {
-      contactData = JSON.parse(stored);
-    } catch(e) {
-      contactData = [];
-    }
-  } else {
-    // prepopulate with initial contacts
-    contactData = initialContacts.slice();
-    saveTracker();
-  }
+async function loadCSV(url){
+  const res = await fetch(url, { cache: "no-store" });
+  const text = await res.text();
+  const rows = text.trim().split(/\r?\n/).map(line => parseCSVLine(line));
+  const headers = rows.shift();
+  return rows.map(r => Object.fromEntries(headers.map((h,i)=>[h, r[i] ?? ""])));
 }
-    function saveTracker() {
-      localStorage.setItem(trackerKey, JSON.stringify(contactData));
+
+function parseCSVLine(line){
+  const out = []; let cur = ''; let q=false;
+  for (let i=0;i<line.length;i++){
+    const c=line[i];
+    if (q){
+      if (c==='"' && line[i+1]==='"'){ cur+='"'; i++; }
+      else if (c==='"'){ q=false; }
+      else cur+=c;
+    } else {
+      if (c===','){ out.push(cur); cur=''; }
+      else if (c==='"'){ q=true; }
+      else cur+=c;
     }
-    function updateSummary() {
-      const counts = { first:0, value:0, follow:0, account:0 };
-      contactData.forEach(c => {
-        if (counts[c.stage] !== undefined) counts[c.stage]++;
-      });
-      document.getElementById('sum-first').innerText = counts.first;
-      document.getElementById('sum-value').innerText = counts.value;
-      document.getElementById('sum-follow').innerText = counts.follow;
-      document.getElementById('sum-accounts').innerText = counts.account;
-      // update overview counts too
-      document.getElementById('phase-count-first').innerText = counts.first;
-      document.getElementById('phase-count-value').innerText = counts.value;
-      document.getElementById('phase-count-follow').innerText = counts.follow;
-      document.getElementById('phase-count-accounts').innerText = counts.account;
-    }
-    function renderTracker() {
-      const tbody = document.getElementById('tracker-body');
-      tbody.innerHTML = '';
-      contactData.forEach((c, idx) => {
-        const tr = document.createElement('tr');
-        // Name
-        const tdName = document.createElement('td');
-        const nameInput = document.createElement('input');
-        nameInput.value = c.name;
-        nameInput.addEventListener('change', e => {
-          c.name = e.target.value;
-          saveTracker();
-        });
-        tdName.appendChild(nameInput);
-        tr.appendChild(tdName);
-        // Info
-        const tdInfo = document.createElement('td');
-        const infoInput = document.createElement('input');
-        infoInput.value = c.info;
-        infoInput.addEventListener('change', e => {
-          c.info = e.target.value;
-          saveTracker();
-        });
-        tdInfo.appendChild(infoInput);
-        tr.appendChild(tdInfo);
-        // Stage select
-        const tdStage = document.createElement('td');
-        const stageSelect = document.createElement('select');
-        [['first','First Contact'], ['value','Value Offering'], ['follow','Follow-up'], ['account','Free Account']].forEach(opt => {
-          const option = document.createElement('option');
-          option.value = opt[0];
-          option.textContent = opt[1];
-          if (opt[0] === c.stage) option.selected = true;
-          stageSelect.appendChild(option);
-        });
-        stageSelect.addEventListener('change', e => {
-          c.stage = e.target.value;
-          saveTracker();
-          updateSummary();
-          renderTracker();
-        });
-        tdStage.appendChild(stageSelect);
-        tr.appendChild(tdStage);
-        // First date
-        const tdFirst = document.createElement('td');
-        const firstInput = document.createElement('input');
-        firstInput.type = 'date';
-        firstInput.value = c.firstDate || '';
-        firstInput.addEventListener('change', e => {
-          c.firstDate = e.target.value;
-          saveTracker();
-        });
-        tdFirst.appendChild(firstInput);
-        tr.appendChild(tdFirst);
-        // Next date
-        const tdNext = document.createElement('td');
-        const nextInput = document.createElement('input');
-        nextInput.type = 'date';
-        nextInput.value = c.nextDate || '';
-        nextInput.addEventListener('change', e => {
-          c.nextDate = e.target.value;
-          saveTracker();
-        });
-        tdNext.appendChild(nextInput);
-        tr.appendChild(tdNext);
-        // Message
-        const tdMsg = document.createElement('td');
-        const msgInput = document.createElement('input');
-        msgInput.value = c.message;
-        msgInput.addEventListener('change', e => {
-          c.message = e.target.value;
-          saveTracker();
-        });
-        tdMsg.appendChild(msgInput);
-        tr.appendChild(tdMsg);
-        // Action
-        const tdAction = document.createElement('td');
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'Delete';
-        deleteBtn.style.backgroundColor = '#e74c3c';
-        deleteBtn.style.color = '#fff';
-        deleteBtn.style.border = 'none';
-        deleteBtn.style.padding = '0.25rem 0.5rem';
-        deleteBtn.style.borderRadius = '3px';
-        deleteBtn.style.cursor = 'pointer';
-        deleteBtn.addEventListener('click', () => {
-          if (confirm('Are you sure you want to delete this contact?')) {
-            contactData.splice(idx, 1);
-            saveTracker();
-            updateSummary();
-            renderTracker();
-          }
-        });
-        tdAction.appendChild(deleteBtn);
-        tr.appendChild(tdAction);
-        tbody.appendChild(tr);
-      });
-      updateSummary();
-    }
-    // Add contact handler
-    document.getElementById('btn-add-contact').addEventListener('click', () => {
-      const name = document.getElementById('add-name').value.trim();
-      const info = document.getElementById('add-info').value.trim();
-      const stage = document.getElementById('add-stage').value;
-      const firstDate = document.getElementById('add-first-date').value;
-      const nextDate = document.getElementById('add-next-date').value;
-      const message = document.getElementById('add-message').value.trim();
-      if (!name) {
-        alert('Please enter a contact name.');
-        return;
-      }
-      contactData.push({ name, info, stage, firstDate, nextDate, message });
-      saveTracker();
-      // reset form
-      document.getElementById('add-name').value = '';
-      document.getElementById('add-info').value = '';
-      document.getElementById('add-stage').value = 'first';
-      document.getElementById('add-first-date').value = '';
-      document.getElementById('add-next-date').value = '';
-      document.getElementById('add-message').value = '';
-      // switch back to list
-      subButtons.forEach(b => b.classList.remove('active'));
-      document.querySelector('[data-subtab="list"]').classList.add('active');
-      subSections.forEach(sec => sec.classList.remove('active'));
-      document.getElementById('sub-list').classList.add('active');
-      renderTracker();
-    });
-    // Export CSV
-    document.getElementById('btn-export').addEventListener('click', () => {
-      if (contactData.length === 0) {
-        alert('There are no contacts to export.');
-        return;
-      }
-      let csv = 'name,info,stage,firstDate,nextDate,message\n';
-      contactData.forEach(c => {
-        csv += `${c.name.replace(/,/g, ' ')} ,${c.info.replace(/,/g, ' ')} ,${c.stage},${c.firstDate || ''},${c.nextDate || ''},${c.message.replace(/,/g,' ')}\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'contacts_export.csv';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    });
-    // Initialize on load
-    loadTracker();
-    renderTracker();
-  </script>
+  }
+  out.push(cur);
+  return out;
+}
+
+function countKPIs(rows){
+  const total = rows.length;
+  const p1 = rows.filter(r=>r.stage==='phase1_sent').length;
+  const p2 = rows.filter(r=>r.stage==='phase2_sent' && (r.template_set||'original')==='original').length;
+  const p2pro = rows.filter(r=>r.stage==='phase2_sent' && r.template_set==='pro').length;
+  const p3 = rows.filter(r=>r.stage==='phase3_sent').length;
+  const replied = rows.filter(r=>r.stage==='replied').length;
+  return { total, p1, p2, p2pro, p3, replied };
+}
+
+function fmtStage(stage){ return `<span class="badge stage-${stage}">${stage}</span>`; }
+
+function renderKpis(k){
+  document.getElementById('k_total').textContent = k.total;
+  document.getElementById('k_p1').textContent = k.p1;
+  document.getElementById('k_p2').textContent = k.p2;
+  document.getElementById('k_p2pro').textContent = k.p2pro;
+  document.getElementById('k_p3').textContent = k.p3;
+  document.getElementById('k_rep').textContent = k.replied;
+}
+
+function renderTable(rows){
+  const cols = [
+    ['id','ID'],['full_name','Name'],['role','Role'],['linkedin_url','LinkedIn'],
+    ['stage','Stage'],['sent_phase1_at','P1 at'],['sent_phase2_at','P2 at'],['sent_phase3_at','P3 at'],
+    ['reply1_at','Reply1 at'],['reply1_note','Reply1 note'],['reply2_at','Reply2 at'],['reply2_note','Reply2 note'],
+    ['reply3_at','Reply3 at'],['reply3_note','Reply3 note'],['template_set','Template']
+  ];
+  let html = '<div class="card" style="overflow:auto">\n<table><thead><tr>' + cols.map(c=>`<th>${c[1]}</th>`).join('') + '</tr></thead><tbody>';
+  for (const r of rows){
+    html += '<tr>' + cols.map(([k,label])=>{
+      let v = r[k]||'';
+      if(k==='linkedin_url' && v) v = `<a class="link" href="${v}" target="_blank">profile</a>`;
+      if(k==='stage') v = fmtStage(r[k]||'');
+      return `<td>${v}</td>`;
+    }).join('') + '</tr>';
+  }
+  html += '</tbody></table></div>';
+  document.getElementById('view').innerHTML = html;
+}
+
+function renderTabs(rows){
+  const tabs = [
+    {id:'all', label:'All'},
+    {id:'queued', label:'Queued'},
+    {id:'p1', label:'Phase 1 sent'},
+    {id:'p2o', label:'Phase 2 Original'},
+    {id:'p2p', label:'Phase 2 Pro'},
+    {id:'p3', label:'Phase 3 sent'},
+    {id:'replied', label:'Replied'}
+  ];
+  const el = document.getElementById('tabs');
+  el.innerHTML = '';
+  tabs.forEach(t=>{
+    const btn = document.createElement('button');
+    btn.textContent = t.label;
+    btn.onclick = ()=>{
+      [...el.children].forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      let filtered = rows;
+      if (t.id==='queued') filtered = rows.filter(r=>r.stage==='queued');
+      if (t.id==='p1') filtered = rows.filter(r=>r.stage==='phase1_sent');
+      if (t.id==='p2o') filtered = rows.filter(r=>r.stage==='phase2_sent' && (r.template_set||'original')==='original');
+      if (t.id==='p2p') filtered = rows.filter(r=>r.stage==='phase2_sent' && r.template_set==='pro');
+      if (t.id==='p3') filtered = rows.filter(r=>r.stage==='phase3_sent');
+      if (t.id==='replied') filtered = rows.filter(r=>r.stage==='replied');
+      renderTable(filtered);
+    };
+    el.appendChild(btn);
+  });
+  el.firstChild.classList.add('active');
+}
+
+(async function init(){
+  try{
+    const rows = await loadCSV(CSV_URL);
+    const k = countKPIs(rows);
+    renderKpis(k);
+    renderTabs(rows);
+    renderTable(rows);
+  }catch(err){
+    document.getElementById('view').innerHTML = `<div class="notice"><b>Failed to load data.</b><br>${err}</div>`;
+    console.error(err);
+  }
+})();
+</script>
 </body>
 </html>
