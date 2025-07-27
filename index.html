@@ -20,8 +20,9 @@
     nav.tabs button { border:1px solid #e5e7eb; background:#fff; padding:10px 14px; border-radius:10px; cursor:pointer; }
     nav.tabs button.active { background:#111; color:#fff; border-color:#111; }
     table { width:100%; border-collapse: collapse; font-size:14px; }
-    th, td { border-bottom: 1px solid #f0f0f0; padding:10px; text-align:left; vertical-align: top; }
+    th, td { border-bottom: 1px solid #f0f0f0; padding:10px; text-align:left; vertical-align: top; color:#111 !important; }
     th { background:#fcfcfc; position: sticky; top: 64px; z-index: 5; }
+    tbody tr { height:auto; }
     .badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid #e5e7eb; }
     .stage-queued { background:#fff7ed; border-color:#fdba74; }
     .stage-phase1_sent { background:#eef2ff; border-color:#c7d2fe; }
@@ -166,15 +167,7 @@ function fmtStage(stage){
 }
 function safe(v, fallback=''){ return (v && String(v).trim().length ? v : fallback); }
 
-function renderKpis(k){
-  document.getElementById('k_total').textContent = k.total;
-  document.getElementById('k_p1').textContent = k.p1;
-  document.getElementById('k_p2').textContent = k.p2;
-  document.getElementById('k_p2pro').textContent = k.p2pro;
-  document.getElementById('k_p3').textContent = k.p3;
-  document.getElementById('k_rep').textContent = k.replied;
-}
-
+/* --- JEDNODUCHÝ STRING RENDERER TABUĽKY --- */
 function renderTable(rows){
   const cols = [
     ['id','ID'],['full_name','Name'],['role','Role'],['linkedin_url','LinkedIn'],
@@ -184,57 +177,46 @@ function renderTable(rows){
   ];
 
   const container = document.getElementById('view');
-  container.innerHTML = '';
-  const wrapper = document.createElement('div');
-  wrapper.className = 'card';
-  wrapper.style.overflow = 'auto';
 
-  const table = document.createElement('table');
-  const thead = document.createElement('thead');
-  const trh = document.createElement('tr');
-  cols.forEach(([,label])=>{
-    const th = document.createElement('th');
-    th.textContent = label;
-    trh.appendChild(th);
-  });
-  thead.appendChild(trh);
-  table.appendChild(thead);
-
-  const tbody = document.createElement('tbody');
+  let html = '<div class="card" style="overflow:auto"><table><thead><tr>';
+  html += cols.map(([,label]) => `<th>${label}</th>`).join('');
+  html += '</tr></thead><tbody>';
 
   rows.forEach((r, idx) => {
-    const tr = document.createElement('tr');
+    html += '<tr>';
     cols.forEach(([key])=>{
-      let v = r[key];
-      if (key==='id') v = safe(v, String(idx+1));
-      if (key==='full_name') v = safe(v, '(no name)');
-      const td = document.createElement('td');
-      if (key==='linkedin_url' && v){
-        const a = document.createElement('a');
-        a.href = v; a.target = '_blank'; a.className='link'; a.textContent='profile';
-        td.appendChild(a);
-      } else if (key==='stage'){
-        td.innerHTML = fmtStage(r.stage);
-      } else {
-        td.textContent = v || '';
+      let v = r[key] ?? '';
+      if (key==='id') v = v || String(idx+1);
+      if (key==='full_name') v = v || '(no name)';
+      if (key==='linkedin_url' && v) {
+        v = `<a class="link" href="${v}" target="_blank">profile</a>`;
       }
-      tr.appendChild(td);
+      if (key==='stage') {
+        const s = stageOf(r);
+        v = `<span class="badge stage-${s}">${s || '—'}</span>`;
+      }
+      html += `<td>${v}</td>`;
     });
-    tbody.appendChild(tr);
+    html += '</tr>';
   });
 
-  table.appendChild(tbody);
-  wrapper.appendChild(table);
-  container.appendChild(wrapper);
+  html += '</tbody></table></div>';
 
-  // istotná diagnostika
-  container.dataset.renderedRows = rows.length;
-  if (!rows.length){
-    const diag = document.createElement('div');
-    diag.className = 'notice';
-    diag.innerHTML = '<b>No rows to display.</b> Filter returned 0 rows.';
-    container.appendChild(diag);
+  if (!rows.length) {
+    html += '<div class="notice"><b>No rows to display.</b> Filter returned 0 rows.</div>';
   }
+
+  container.innerHTML = html;
+  container.dataset.renderedRows = rows.length;
+}
+
+function renderKpis(k){
+  document.getElementById('k_total').textContent = k.total;
+  document.getElementById('k_p1').textContent = k.p1;
+  document.getElementById('k_p2').textContent = k.p2;
+  document.getElementById('k_p2pro').textContent = k.p2pro;
+  document.getElementById('k_p3').textContent = k.p3;
+  document.getElementById('k_rep').textContent = k.replied;
 }
 
 function renderTabs(rows){
@@ -267,7 +249,7 @@ function renderTabs(rows){
     el.appendChild(btn);
   });
 
-  // 1) Programový klik
+  // programový klik na „All“
   if (el.firstChild) el.firstChild.click();
 }
 
@@ -277,14 +259,11 @@ function renderTabs(rows){
     const rows = await loadCSV(CSV_URL);
     renderKpis(countKPIs(rows));
     renderTabs(rows);
-
-    // 2) Priamy render (pre istotu) – ak by programový klik neprebehol
+    // záloha: priame zobrazenie všetkých
     renderTable(rows);
-
-    // 3) Overenie – ak tabuľka stále nemá riadky, logni varovanie
     const rendered = Number(document.getElementById('view').dataset.renderedRows || 0);
     if (!rendered && rows.length){
-      console.warn('Rendered 0 rows, but rows exist. Forcing render again.');
+      console.warn('Rendered 0 rows, forcing render again.');
       renderTable(rows);
     }
   }catch(err){
