@@ -64,14 +64,11 @@
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZOSOSxfS-YBKi0GNNDJ4FkwX1yNkg47Wivbb1936rkHiFabJ98rerOsOEdlZ2WFzxr2R5J0ZWWp2p/pub?gid=0&single=true&output=csv";
 
-const normStr = s => String(s ?? "")
-  .replace(/\uFEFF/g,"")
-  .trim();
-
+const normStr = s => String(s ?? "").replace(/\uFEFF/g,"").trim();
 const stageOf = r => normStr(r.stage).toLowerCase();
 const tmplOf  = r => (normStr(r.template_set).toLowerCase() || 'original');
 
-/* ---------- CSV loader (robust + fallback + trim) ---------- */
+/* ---------- CSV loader ---------- */
 async function loadCSV(url){
   const res = await fetch(url, { cache: "no-store" });
   let text = await res.text();
@@ -104,13 +101,13 @@ async function loadCSV(url){
       if (!key) return;
       let v = (cols[i] ?? "");
       v = v.replace(/^"|"$/g, "");
-      v = normStr(v);                // <<< kľúčové: trim + odstránenie BOM
+      v = normStr(v);
       obj[key] = v;
     });
     return obj;
   });
 
-  // Debug info
+  // Debug
   const dbg = document.getElementById('dbg');
   if (dbg) {
     const counts = {
@@ -230,8 +227,13 @@ function renderTable(rows){
   wrapper.appendChild(table);
   container.appendChild(wrapper);
 
+  // istotná diagnostika
+  container.dataset.renderedRows = rows.length;
   if (!rows.length){
-    container.innerHTML = '<div class="card">No rows to display.</div>';
+    const diag = document.createElement('div');
+    diag.className = 'notice';
+    diag.innerHTML = '<b>No rows to display.</b> Filter returned 0 rows.';
+    container.appendChild(diag);
   }
 }
 
@@ -265,7 +267,8 @@ function renderTabs(rows){
     el.appendChild(btn);
   });
 
-  if (el.firstChild) el.firstChild.click(); // spusti hneď
+  // 1) Programový klik
+  if (el.firstChild) el.firstChild.click();
 }
 
 /* ---------- init ---------- */
@@ -274,6 +277,16 @@ function renderTabs(rows){
     const rows = await loadCSV(CSV_URL);
     renderKpis(countKPIs(rows));
     renderTabs(rows);
+
+    // 2) Priamy render (pre istotu) – ak by programový klik neprebehol
+    renderTable(rows);
+
+    // 3) Overenie – ak tabuľka stále nemá riadky, logni varovanie
+    const rendered = Number(document.getElementById('view').dataset.renderedRows || 0);
+    if (!rendered && rows.length){
+      console.warn('Rendered 0 rows, but rows exist. Forcing render again.');
+      renderTable(rows);
+    }
   }catch(err){
     document.getElementById('view').innerHTML =
       `<div class="notice"><b>Failed to load data.</b><br>${escapeHTML(err)}</div>`;
