@@ -5,38 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>3D.sk – Outreach Dashboard</title>
   <style>
-    :root { --gap: 16px; --pad: 20px; font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
-    body { margin: 0; color: #111; background: #fafafa; }
-    header { padding: var(--pad); background: #fff; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 10; }
-    h1 { font-size: 24px; margin: 0 0 6px; }
-    .sub { color:#6b7280; font-size: 14px; }
-    main { max-width: 1200px; margin: 0 auto; padding: var(--pad); }
-    .grid { display: grid; gap: var(--gap); }
-    .cards { grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); }
-    .card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:18px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
-    .kpi { font-size: 34px; font-weight: 700; margin: 8px 0 0; }
-    .muted { color:#6b7280; font-size: 13px; }
-    nav.tabs { display:flex; gap:8px; margin: 24px 0; flex-wrap: wrap; }
-    nav.tabs button { border:1px solid #e5e7eb; background:#fff; padding:10px 14px; border-radius:10px; cursor:pointer; }
-    nav.tabs button.active { background:#111; color:#fff; border-color:#111; }
+    :root { --gap:16px; --pad:20px; font-family:system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    body { margin:0; color:#111; background:#fafafa; }
+    header { padding:var(--pad); background:#fff; border-bottom:1px solid #e5e7eb; position:sticky; top:0; z-index:10; }
+    h1 { font-size:24px; margin:0 0 6px; }
+    .sub{ color:#6b7280; font-size:14px; }
+    main{ max-width:1200px; margin:0 auto; padding:var(--pad); }
 
-    table { width:100%; border-collapse: collapse; font-size:14px; table-layout:auto; }
-    th, td { border-bottom: 1px solid #e5e7eb; padding:10px; text-align:left; vertical-align: top; color:#111 !important; background:#fff; }
-    th { background:#fcfcfc; font-weight:600; }
-    tbody tr:nth-child(even) td { background:#f9fafb; }
-    .tablewrap { overflow:auto; max-height:520px; border-radius:12px; }
+    .grid{ display:grid; gap:var(--gap); }
+    .cards{ grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); }
+    .card{ background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:18px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+    .kpi{ font-size:34px; font-weight:700; margin:8px 0 0; }
+    .muted{ color:#6b7280; font-size:13px; }
 
-    .badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid #e5e7eb; }
-    .stage-queued { background:#fff7ed; border-color:#fdba74; }
-    .stage-phase1_sent { background:#eef2ff; border-color:#c7d2fe; }
-    .stage-phase2_sent { background:#ecfeff; border-color:#a5f3fc; }
-    .stage-phase3_sent { background:#f0fdf4; border-color:#bbf7d0; }
-    .stage-replied { background:#ecfdf5; border-color:#6ee7b7; }
-    .notice { background:#fff; border:1px solid #fde68a; border-left:6px solid #f59e0b; padding:14px; border-radius:10px; }
-    .footer { color:#9ca3af; font-size:12px; margin-top:32px; }
-    a.link { color:#2563eb; text-decoration:none; }
-    details.debug { margin-top:24px; }
-    pre { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; overflow:auto; }
+    .toolbar{ display:flex; gap:8px; align-items:center; margin:24px 0 8px; flex-wrap:wrap; }
+    .btn{ background:#fff; border:1px solid #e5e7eb; padding:10px 14px; border-radius:10px; cursor:pointer; }
+    .btn:hover{ background:#f8fafc; }
+    .time{ margin-left:auto; color:#6b7280; font-size:13px; }
+
+    nav.tabs{ display:flex; gap:8px; margin:8px 0 24px; flex-wrap:wrap; }
+    nav.tabs button{ border:1px solid #e5e7eb; background:#fff; padding:10px 14px; border-radius:10px; cursor:pointer; }
+    nav.tabs button.active{ background:#111; color:#fff; border-color:#111; }
+
+    table{ width:100%; border-collapse:collapse; font-size:14px; table-layout:auto; }
+    th,td{ border-bottom:1px solid #e5e7eb; padding:10px; text-align:left; vertical-align:top; color:#111 !important; background:#fff; }
+    th{ background:#fcfcfc; font-weight:600; }
+    tbody tr:nth-child(even) td{ background:#f9fafb; }
+    .tablewrap{ overflow:auto; max-height:520px; border-radius:12px; background:#fff; border:1px solid #e5e7eb; }
+
+    .badge{ display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid #e5e7eb; }
+    .stage-queued{ background:#fff7ed; border-color:#fdba74; }
+    .stage-phase1_sent{ background:#eef2ff; border-color:#c7d2fe; }
+    .stage-phase2_sent{ background:#ecfeff; border-color:#a5f3fc; }
+    .stage-phase3_sent{ background:#f0fdf4; border-color:#bbf7d0; }
+    .stage-replied{ background:#ecfdf5; border-color:#6ee7b7; }
+
+    .notice{ background:#fff; border:1px solid #fde68a; border-left:6px solid #f59e0b; padding:14px; border-radius:10px; }
+    .footer{ color:#9ca3af; font-size:12px; margin-top:32px; }
+    a.link{ color:#2563eb; text-decoration:none; }
   </style>
 </head>
 <body>
@@ -44,6 +50,7 @@
     <h1>3D.sk Outreach Dashboard</h1>
     <div class="sub">Live data from Google Sheets → Contacts_Public (read-only). Messages in EN. Limits: 30 Phase 1/day, 60–120 s pauses.</div>
   </header>
+
   <main>
     <section class="grid cards" id="kpis">
       <div class="card"><div class="muted">Contacts total</div><div class="kpi" id="k_total">–</div></div>
@@ -54,29 +61,41 @@
       <div class="card"><div class="muted">Replies</div><div class="kpi" id="k_rep">–</div></div>
     </section>
 
+    <div class="toolbar">
+      <button class="btn" id="btnRefresh">Refresh</button>
+      <button class="btn" id="btnExport">Export CSV</button>
+      <span class="time" id="lastSync">Last sync: –</span>
+    </div>
+
     <nav class="tabs" id="tabs"></nav>
     <section id="view"></section>
-
-    <details class="debug">
-      <summary>Debug</summary>
-      <div id="dbg"></div>
-    </details>
 
     <div class="footer">© 3D.sk – Outreach. Data source: Google Sheets (Contacts_Public CSV). Credentials for Pro accounts are never exposed here.</div>
   </main>
 
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZOSOSxfS-YBKi0GNNDJ4FkwX1yNkg47Wivbb1936rkHiFabJ98rerOsOEdlZ2WFzxr2R5J0ZWWp2p/pub?gid=0&single=true&output=csv";
+const TZ = "Europe/Bratislava";
+let ALL_ROWS = [];
 
 const normStr = s => String(s ?? "").replace(/\uFEFF/g,"").trim();
 const stageOf = r => normStr(r.stage).toLowerCase();
 const tmplOf  = r => (normStr(r.template_set).toLowerCase() || 'original');
 
-async function loadCSV(url){
-  const res = await fetch(url, { cache: "no-store" });
-  let text = await res.text();
-  text = text.replace(/^\uFEFF/, "");
+function fmtDate(dt){
+  if(!dt) return "";
+  const d = new Date(dt);
+  if (isNaN(d)) return dt;
+  return new Intl.DateTimeFormat("en-GB",{
+    timeZone:TZ, year:"numeric", month:"2-digit", day:"2-digit",
+    hour:"2-digit", minute:"2-digit"
+  }).format(d);
+}
 
+async function loadCSV(url){
+  const res = await fetch(url, { cache:"no-store" });
+  let text = await res.text();
+  text = text.replace(/^\uFEFF/,"");
   const lines = text.trim().split(/\r?\n/);
   const headerLine = lines.shift() || "";
   const headersRaw = parseCSVLine(headerLine);
@@ -87,61 +106,36 @@ async function loadCSV(url){
     "reply1_at","reply1_note","reply2_at","reply2_note","reply3_at","reply3_note",
     "template_set","evidence"
   ];
-
   const normHeader = s => normStr(s).toLowerCase().replace(/[^a-z0-9_]+/g,"");
-  const canonicalMap = new Map(canonical.map(k => [normHeader(k), k]));
-  const mapByName = headersRaw.map(h => canonicalMap.get(normHeader(h)) || null);
-
+  const cmap = new Map(canonical.map(k=>[normHeader(k),k]));
+  const mapByName = headersRaw.map(h=>cmap.get(normHeader(h))||null);
   const matched = mapByName.filter(Boolean).length;
-  const useOrderFallback = matched < Math.ceil(headersRaw.length * 0.5);
-  const map = useOrderFallback
-    ? headersRaw.map((_, i) => canonical[i] || null)
-    : mapByName;
+  const useOrderFallback = matched < Math.ceil(headersRaw.length*0.5);
+  const map = useOrderFallback ? headersRaw.map((_,i)=>canonical[i]||null) : mapByName;
 
-  const rows = lines.map(parseCSVLine).map(cols => {
+  return lines.map(parseCSVLine).map(cols=>{
     const obj = {};
-    map.forEach((key, i) => {
-      if (!key) return;
-      let v = (cols[i] ?? "");
-      v = v.replace(/^"|"$/g, "");
+    map.forEach((key,i)=>{
+      if(!key) return;
+      let v = (cols[i] ?? "").replace(/^"|"$/g,"");
       v = normStr(v);
       obj[key] = v;
     });
     return obj;
   });
-
-  const dbg = document.getElementById('dbg');
-  if (dbg) {
-    const counts = {
-      queued: rows.filter(r=>stageOf(r)==='queued').length,
-      p1:     rows.filter(r=>stageOf(r)==='phase1_sent').length,
-      p2o:    rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='original').length,
-      p2p:    rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='pro').length,
-      p3:     rows.filter(r=>stageOf(r)==='phase3_sent').length,
-      replied:rows.filter(r=>stageOf(r)==='replied').length,
-    };
-    dbg.innerHTML =
-      `<p><b>headersRaw</b>: ${escapeHTML(JSON.stringify(headersRaw))}</p>` +
-      `<p><b>map</b>: ${escapeHTML(JSON.stringify(map))}</p>` +
-      `<p><b>rows.length</b>: ${rows.length}</p>` +
-      `<p><b>counts</b>: ${escapeHTML(JSON.stringify(counts))}</p>` +
-      (rows[0] ? `<pre>${escapeHTML(JSON.stringify(rows[0], null, 2))}</pre>` : '');
-  }
-
-  return rows;
 }
 
 function parseCSVLine(line){
-  const out = []; let cur = ''; let q=false;
-  for (let i=0;i<line.length;i++){
+  const out=[]; let cur=''; let q=false;
+  for(let i=0;i<line.length;i++){
     const c=line[i];
-    if (q){
-      if (c==='"' && line[i+1]==='"'){ cur+='"'; i++; }
-      else if (c=== '"'){ q=false; }
+    if(q){
+      if(c=='"' && line[i+1]=='"'){ cur+='"'; i++; }
+      else if(c=='"'){ q=false; }
       else cur+=c;
-    } else {
-      if (c=== ','){ out.push(cur); cur=''; }
-      else if (c=== '"'){ q=true; }
+    }else{
+      if(c==','){ out.push(cur); cur=''; }
+      else if(c=='"'){ q=true; }
       else cur+=c;
     }
   }
@@ -149,16 +143,16 @@ function parseCSVLine(line){
   return out;
 }
 
-function escapeHTML(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-
 function countKPIs(rows){
-  const total = rows.length;
-  const p1 = rows.filter(r=>stageOf(r)==='phase1_sent').length;
-  const p2 = rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='original').length;
-  const p2pro = rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='pro').length;
-  const p3 = rows.filter(r=>stageOf(r)==='phase3_sent').length;
-  const replied = rows.filter(r=>stageOf(r)==='replied').length;
-  return { total, p1, p2, p2pro, p3, replied };
+  return {
+    total: rows.length,
+    p1: rows.filter(r=>stageOf(r)==='phase1_sent').length,
+    p2: rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='original').length,
+    p2pro: rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='pro').length,
+    p3: rows.filter(r=>stageOf(r)==='phase3_sent').length,
+    replied: rows.filter(r=>stageOf(r)==='replied').length,
+    queued: rows.filter(r=>stageOf(r)==='queued').length,
+  };
 }
 
 function renderKpis(k){
@@ -170,6 +164,40 @@ function renderKpis(k){
   document.getElementById('k_rep').textContent = k.replied;
 }
 
+function renderTabs(rows){
+  const k = countKPIs(rows);
+  const tabs = [
+    {id:'all',   label:`All (${k.total})`},
+    {id:'queued',label:`Queued (${k.queued})`},
+    {id:'p1',    label:`Phase 1 sent (${k.p1})`},
+    {id:'p2o',   label:`Phase 2 Original (${k.p2})`},
+    {id:'p2p',   label:`Phase 2 Pro (${k.p2pro})`},
+    {id:'p3',    label:`Phase 3 sent (${k.p3})`},
+    {id:'rep',   label:`Replied (${k.replied})`},
+  ];
+  const el = document.getElementById('tabs');
+  el.innerHTML = '';
+  tabs.forEach(t=>{
+    const btn=document.createElement('button');
+    btn.textContent = t.label;
+    btn.className = 'btn';
+    btn.onclick = ()=>{
+      [...el.children].forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      let filtered=rows;
+      if(t.id==='queued') filtered=rows.filter(r=>stageOf(r)==='queued');
+      if(t.id==='p1')     filtered=rows.filter(r=>stageOf(r)==='phase1_sent');
+      if(t.id==='p2o')    filtered=rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='original');
+      if(t.id==='p2p')    filtered=rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='pro');
+      if(t.id==='p3')     filtered=rows.filter(r=>stageOf(r)==='phase3_sent');
+      if(t.id==='rep')    filtered=rows.filter(r=>stageOf(r)==='replied');
+      renderTable(filtered);
+    };
+    el.appendChild(btn);
+  });
+  if (el.firstChild) el.firstChild.classList.add('active');
+}
+
 function renderTable(rows){
   const cols = [
     ['id','ID'],['full_name','Name'],['role','Role'],['linkedin_url','LinkedIn'],
@@ -178,90 +206,82 @@ function renderTable(rows){
     ['reply3_at','Reply3 at'],['reply3_note','Reply3 note'],['template_set','Template']
   ];
 
-  const container = document.getElementById('view');
-
-  let html = '<div class="card tablewrap"><table><thead><tr>';
-  html += cols.map(([,label]) => `<th>${label}</th>`).join('');
+  let html = '<div class="tablewrap"><table><thead><tr>';
+  html += cols.map(([,label])=>`<th>${label}</th>`).join('');
   html += '</tr></thead><tbody>';
 
-  rows.forEach((r, idx) => {
+  rows.forEach((r,idx)=>{
     html += '<tr>';
     cols.forEach(([key])=>{
       let v = r[key] ?? '';
-      if (key==='id') v = v || String(idx+1);
-      if (key==='full_name') v = v || '(no name)';
-      if (key==='linkedin_url' && v) v = `<a class="link" href="${v}" target="_blank">profile</a>`;
-      if (key==='stage') {
+      if(key==='id') v = v || String(idx+1);
+      if(key==='full_name') v = v || '(no name)';
+      if(key==='linkedin_url' && v) v = `<a class="link" href="${v}" target="_blank">profile</a>`;
+      if(key==='stage'){
         const s = stageOf(r);
         v = `<span class="badge stage-${s}">${s || '—'}</span>`;
       }
+      if(/_at$/.test(key)) v = fmtDate(v);
       html += `<td>${v}</td>`;
     });
     html += '</tr>';
   });
 
   html += '</tbody></table></div>';
-
-  if (!rows.length) {
-    html += '<div class="notice"><b>No rows to display.</b> Filter returned 0 rows.</div>';
-  }
-
+  const container = document.getElementById('view');
   container.innerHTML = html;
   container.dataset.renderedRows = rows.length;
 }
 
-function renderTabs(rows){
-  const tabs = [
-    {id:'all', label:'All'},
-    {id:'queued', label:'Queued'},
-    {id:'p1', label:'Phase 1 sent'},
-    {id:'p2o', label:'Phase 2 Original'},
-    {id:'p2p', label:'Phase 2 Pro'},
-    {id:'p3', label:'Phase 3 sent'},
-    {id:'replied', label:'Replied'}
-  ];
-  const el = document.getElementById('tabs');
-  el.innerHTML = '';
-  tabs.forEach(t=>{
-    const btn = document.createElement('button');
-    btn.textContent = t.label;
-    btn.onclick = ()=>{
-      [...el.children].forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      let filtered = rows;
-      if (t.id==='queued') filtered = rows.filter(r=>stageOf(r)==='queued');
-      if (t.id==='p1')     filtered = rows.filter(r=>stageOf(r)==='phase1_sent');
-      if (t.id==='p2o')    filtered = rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='original');
-      if (t.id==='p2p')    filtered = rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='pro');
-      if (t.id==='p3')     filtered = rows.filter(r=>stageOf(r)==='phase3_sent');
-      if (t.id==='replied')filtered = rows.filter(r=>stageOf(r)==='replied');
-      renderTable(filtered);
-    };
-    el.appendChild(btn);
-  });
-  if (el.firstChild) el.firstChild.click();
+function setLastSync(){
+  const now = new Date();
+  const text = new Intl.DateTimeFormat("en-GB",{
+    timeZone:TZ, year:"numeric", month:"2-digit", day:"2-digit",
+    hour:"2-digit", minute:"2-digit", second:"2-digit"
+  }).format(now);
+  document.getElementById('lastSync').textContent = `Last sync: ${text} (${TZ})`;
 }
 
-function escapeHTML(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function toCSV(rows){
+  const headers = Object.keys(rows[0] || {
+    id:"", full_name:"", first_name:"", role:"", linkedin_url:"", stage:"",
+    sent_phase1_at:"", sent_phase2_at:"", sent_phase3_at:"",
+    reply1_at:"", reply1_note:"", reply2_at:"", reply2_note:"", reply3_at:"", reply3_note:"",
+    template_set:"", evidence:""
+  });
+  const esc = v => `"${String(v ?? '').replace(/"/g,'""')}"`;
+  const lines = [headers.map(esc).join(',')];
+  rows.forEach(r=>{
+    lines.push(headers.map(h=>esc(r[h] ?? '')).join(','));
+  });
+  return lines.join('\r\n');
+}
 
-/* init */
-(async function init(){
-  try{
-    const rows = await loadCSV(CSV_URL);
-    renderKpis(countKPIs(rows));
-    renderTabs(rows);
-    renderTable(rows); // fallback
-    const rendered = Number(document.getElementById('view').dataset.renderedRows || 0);
-    if (!rendered && rows.length){
-      console.warn('Rendered 0 rows, forcing render again.');
-      renderTable(rows);
-    }
-  }catch(err){
-    document.getElementById('view').innerHTML =
-      `<div class="notice"><b>Failed to load data.</b><br>${escapeHTML(err)}</div>`;
-    console.error(err);
-  }
-})();
+function downloadCSV(rows){
+  const csv = toCSV(rows);
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `outreach_snapshot_${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  URL.revokeObjectURL(url);
+  a.remove();
+}
+
+async function refreshAll(){
+  ALL_ROWS = await loadCSV(CSV_URL);
+  renderKpis(countKPIs(ALL_ROWS));
+  renderTabs(ALL_ROWS);
+  renderTable(ALL_ROWS);
+  setLastSync();
+}
+
+/* Init */
+document.getElementById('btnRefresh').onclick = ()=>refreshAll();
+document.getElementById('btnExport').onclick = ()=>downloadCSV(ALL_ROWS);
+refreshAll();
 </script>
 </body>
 </html>
