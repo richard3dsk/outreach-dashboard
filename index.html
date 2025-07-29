@@ -2,16 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>3D.sk – Outreach Dashboard</title>
+  <title>3D.sk – Outreach Dashboard</title>
 
-  <!-- ──── 1. STYLING ─────────────────────────────────────────────── -->
+  <!-- ─── 1. STYLING ─────────────────────────────────────────────── -->
   <style>
-    :root{--gap:16px;--pad:20px;font-family:System‑ui,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif;}
+    :root{--gap:16px;--pad:20px;font-family:System-ui,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif;}
     body{margin:0;color:#111;background:#fafafa;}
     header{padding:var(--pad);background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:10;}
     h1{font-size:24px;margin:0 0 6px}
     .sub{color:#6b7280;font-size:14px}
     main{max-width:1200px;margin:0 auto;padding:var(--pad)}
+
     .grid{display:grid;gap:var(--gap)}
     .cards{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
     .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
@@ -49,26 +50,26 @@
 
 <body>
 <header>
-  <h1>3D.sk Outreach Dashboard</h1>
-  <div class="sub">Live dáta z Google Sheets → list Contacts_Public (read‑only). Limits: 30 Phase 1/deň, 60–120 s pauses.</div>
+  <h1>3D.sk Outreach Dashboard</h1>
+  <div class="sub">Live dáta z Google Sheets → list Contacts_Public (read‑only). Limits: 30 Phase 1/deň, 60–120 s pauses.</div>
 </header>
 
 <main>
   <!-- 2. KPI CARDS -->
   <section class="grid cards" id="kpis">
-    <div class="card"><div class="muted">Contacts total</div><div class="kpi" id="k_total">–</div></div>
-    <div class="card"><div class="muted">Phase 1 sent</div><div class="kpi" id="k_p1">–</div></div>
-    <div class="card"><div class="muted">Phase 2 sent (Original)</div><div class="kpi" id="k_p2">–</div></div>
-    <div class="card"><div class="muted">Phase 2 sent (Pro)</div><div class="kpi" id="k_p2pro">–</div></div>
-    <div class="card"><div class="muted">Phase 3 sent</div><div class="kpi" id="k_p3">–</div></div>
+    <div class="card"><div class="muted">Contacts total</div><div class="kpi" id="k_total">–</div></div>
+    <div class="card"><div class="muted">Phase 1 sent</div><div class="kpi" id="k_p1">–</div></div>
+    <div class="card"><div class="muted">Phase 2 sent (Original)</div><div class="kpi" id="k_p2">–</div></div>
+    <div class="card"><div class="muted">Phase 2 sent (Pro)</div><div class="kpi" id="k_p2pro">–</div></div>
+    <div class="card"><div class="muted">Phase 3 sent</div><div class="kpi" id="k_p3">–</div></div>
     <div class="card"><div class="muted">Replied</div><div class="kpi" id="k_rep">–</div></div>
   </section>
 
   <!-- 3. TOOLBAR -->
   <div class="toolbar">
     <button class="btn" id="btnRefresh">Refresh</button>
-    <button class="btn" id="btnExport">Export csv</button>
-    <span class="time" id="lastSync">Last sync: –/–</span>
+    <button class="btn" id="btnExport">Export csv</button>
+    <span class="time" id="lastSync">Last sync: –/–</span>
   </div>
 
   <!-- 4. TABS -->
@@ -77,49 +78,53 @@
   <!-- 5. TABLE VIEW -->
   <section id="view"></section>
 
-  <div class="footer">© 3D.sk – Outreach. Data source: Google Sheets (Contact CSV).</div>
+  <div class="footer">© 3D.sk – Outreach. Data source: Google Sheets (Contact CSV).</div>
 </main>
 
-<!-- ──── 6. SCRIPT ─────────────────────────────────────────────── -->
+<!-- ─── 6. SCRIPT ─────────────────────────────────────────────── -->
 <script>
 /* ==== CONFIG ==== */
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?gid=1094232450&single=true&output=csv";
-const CSV_URL = "https://docs.google.com/spreadsheets/d/1D1OL0oAvxWTNJYG6SnwraibBupq0TXRoUxNTWOTBg-I/gviz/tq?tqx=out:csv&gid=1094232450";
-const TZ   = "Europe/Bratislava";
+const CSV_URL =
+  "https://docs.google.com/spreadsheets/d/1D1OL0oAvxWTNJYG6SnwraibBupq0TXRoUxNTWOTBg-I/gviz/tq?tqx=out:csv&gid=1094232450";
+const TZ = "Europe/Bratislava";
 
 /* ==== GLOBAL ==== */
-let ALL_ROWS = [];      // všetky stiahnuté riadky
-const normStr   = s => String(s ?? '').replace(/\uFEFF/g,'').trim();
-const stageOf   = r => normStr(r.stage).toLowerCase();
-const tmplOf    = r => (normStr(r.template_set).toLowerCase()||'original');
+let ALL_ROWS = [];               // cache všetkých stiahnutých riadkov
+const normStr = s => String(s ?? '').replace(/\uFEFF/g,'').trim();
+const stageOf = r => normStr(r.stage).toLowerCase();
+const tmplOf  = r => normStr(r.template_set).toLowerCase() || 'original';
 
-/* ===== HELPERS ===== */
-function fmtDate(d){
-  if(!d) return '';
-  const n = new Date(d);
-  if (isNaN(n)) return d;
-  return new Intl.DateTimeFormat('en‑GB',{
+/* ===== HELPERS ===== */
+function fmtDate(dt){
+  if(!dt) return '';
+  const d = new Date(dt);
+  if (isNaN(d)) return dt;
+  return new Intl.DateTimeFormat('en-GB',{
     timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',
     hour:'2-digit',minute:'2-digit'
-  }).format(n);
+  }).format(d);
 }
 
-/* ===== LOAD ===== */
+/* ===== CSV LOAD ===== */
 async function loadCsv(url){
   const res  = await fetch(url,{cache:'no-store'});
   const text = (await res.text()).replace(/\uFEFF/,'');
   const lines = text.trim().split(/\r?\n/);
   const header = lines.shift() || '';
   const headersRaw = parseCsvLine(header);
+
+  /* Mapovanie hlavičiek → kanonické mená stĺpcov */
   const canonical = [
     'id','full_name','first_name','role','linkedin_url','stage',
     'sent_phase1_at','sent_phase2_at','sent_phase3_at',
     'reply1_at','reply1_note','reply2_at','reply2_note','reply3_at','reply3_note',
     'template_set','evidence'
   ];
-  const normHeader = s=>normStr(s).toLowerCase().replace(/[^a-z0-9_]+/g,'');
+  const normHeader = s => normStr(s).toLowerCase().replace(/[^a-z0-9_]+/g,'');
   const cmap = new Map(canonical.map(k=>[normHeader(k),k]));
   const mapByName = headersRaw.map(h=>cmap.get(normHeader(h))||null);
+
+  /* fallback – ak chýba viac než polovica hlavičiek, použijem poradie */
   const matched = mapByName.filter(Boolean).length;
   const useOrderFallback = matched < Math.ceil(headersRaw.length*0.5);
   const map = useOrderFallback ? headersRaw.map((_,i)=>canonical[i]||null) : mapByName;
@@ -129,23 +134,22 @@ async function loadCsv(url){
     map.forEach((key,i)=>{
       if(!key) return;
       let v = (cols[i] ?? '').replace(/"/g,'');
-      v = normStr(v);
-      obj[key] = v;
+      obj[key] = normStr(v);
     });
     return obj;
   });
 }
 
-/* ===== KPIs / TABS ===== */
+/* ===== KPI & TABS ===== */
 function countKPIs(rows){
   return {
     total: rows.length,
-    p1:    rows.filter(r=>stageOf(r)==='phase1_sent').length,
-    p2:    rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='original').length,
+    p1: rows.filter(r=>stageOf(r)==='phase1_sent').length,
+    p2: rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='original').length,
     p2pro: rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='pro').length,
-    p3:    rows.filter(r=>stageOf(r)==='phase3_sent').length,
+    p3: rows.filter(r=>stageOf(r)==='phase3_sent').length,
     replied: rows.filter(r=>stageOf(r)==='replied').length,
-    queued:  rows.filter(r=>stageOf(r)==='queued').length
+    queued: rows.filter(r=>stageOf(r)==='queued').length
   };
 }
 
@@ -161,38 +165,38 @@ function renderKpis(k){
 function renderTabs(rows){
   const k = countKPIs(rows);
   const tabs = [
-    {id:'all',     label:`All (${k.total})`},
-    {id:'queued',  label:`Queued (${k.queued})`},
-    {id:'p1',      label:`Phase 1 (${k.p1})`},
-    {id:'p2',      label:`Phase 2 (${k.p2})`},
-    {id:'p2pro',   label:`Phase 2 Pro (${k.p2pro})`},
-    {id:'p3',      label:`Phase 3 (${k.p3})`},
-    {id:'rep',     label:`Replied (${k.replied})`}
+    {id:'all',    label:`All (${k.total})`},
+    {id:'queued', label:`Queued (${k.queued})`},
+    {id:'p1',     label:`Phase 1 (${k.p1})`},
+    {id:'p2',     label:`Phase 2 (${k.p2})`},
+    {id:'p2pro',  label:`Phase 2 Pro (${k.p2pro})`},
+    {id:'p3',     label:`Phase 3 (${k.p3})`},
+    {id:'rep',    label:`Replied (${k.replied})`}
   ];
-  const el = document.getElementById('tabs');
-  el.innerHTML = '';
+  const nav = document.getElementById('tabs');
+  nav.innerHTML = '';
   tabs.forEach(t=>{
     const btn = document.createElement('button');
     btn.textContent = t.label;
     btn.className = 'btn';
     btn.onclick = ()=>{
-      [...el.children].forEach(b=>b.classList.remove('active'));
-      let filtered=rows;
-      if(t.id==='queued') filtered=rows.filter(r=>stageOf(r)==='queued');
-      if(t.id==='p1')     filtered=rows.filter(r=>stageOf(r)==='phase1_sent');
-      if(t.id==='p2')     filtered=rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='original');
-      if(t.id==='p2pro')  filtered=rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='pro');
-      if(t.id==='p3')     filtered=rows.filter(r=>stageOf(r)==='phase3_sent');
-      if(t.id==='rep')    filtered=rows.filter(r=>stageOf(r)==='replied');
-      renderTable(filtered);
+      [...nav.children].forEach(b=>b.classList.remove('active'));
+      let filt=rows;
+      if(t.id==='queued') filt=rows.filter(r=>stageOf(r)==='queued');
+      if(t.id==='p1')     filt=rows.filter(r=>stageOf(r)==='phase1_sent');
+      if(t.id==='p2')     filt=rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='original');
+      if(t.id==='p2pro')  filt=rows.filter(r=>stageOf(r)==='phase2_sent' && tmplOf(r)==='pro');
+      if(t.id==='p3')     filt=rows.filter(r=>stageOf(r)==='phase3_sent');
+      if(t.id==='rep')    filt=rows.filter(r=>stageOf(r)==='replied');
+      renderTable(filt);
       btn.classList.add('active');
     };
-    el.appendChild(btn);
+    nav.appendChild(btn);
   });
-  if(el.firstChild) el.firstChild.classList.add('active');
+  nav.firstChild?.classList.add('active');
 }
 
-/* ===== TABLE ===== */
+/* ===== TABLE ===== */
 function renderTable(rows){
   const cols = [
     ['id','ID'],['full_name','Name'],['role','Role'],['linkedin_url','LinkedIn'],
@@ -200,75 +204,65 @@ function renderTable(rows){
     ['reply1_at','Reply1 at'],['reply1_note','Reply1 note'],['reply2_at','Reply2 at'],['reply2_note','Reply2 note'],
     ['reply3_at','Reply3 at'],['reply3_note','Reply3 note'],['template_set','Template']
   ];
-  let html = '<div class="tablewrap"><table><thead><tr>';
-  html += cols.map(([_,label])=>`<th>${label}</th>`).join('');
-  html += '</tr></thead><tbody>';
+  let html='<div class="tablewrap"><table><thead><tr>';
+  html+=cols.map(([_,lbl])=>`<th>${lbl}</th>`).join('')+'</tr></thead><tbody>';
 
-  rows.forEach((r,idx)=>{
-    html += '<tr>';
+  rows.forEach((r,i)=>{
+    html+='<tr>';
     cols.forEach(([key])=>{
-      let v = r[key] ?? '';
-      if(key==='id')              v = v || String(idx+1);
-      if(key==='full_name')       v = v || '(no name)';
-      if(key==='linkedin_url' && v)
-          v = `<a class="link" href="${v}" target="_blank">profile</a>`;
+      let v=r[key]??'';
+      if(key==='id')                v=v||String(i+1);
+      if(key==='full_name')         v=v||'(no name)';
+      if(key==='linkedin_url'&&v)   v=`<a class="link" href="${v}" target="_blank">profile</a>`;
       if(key==='stage'){
-        const s = stageOf(r);
-        v = `<span class="badge stage-${s}">${s.toUpperCase()}</span>`;
+        const s=stageOf(r);
+        v=`<span class="badge stage-${s}">${s.toUpperCase()}</span>`;
       }
-      if(/^.{4}(_at)$/.test(key)) v = fmtDate(v);
-      html += `<td title="${v}">${v}</td>`;                       /* <<< tooltip */
+      if(/_at$/.test(key))          v=fmtDate(v);
+      html+=`<td title="${v}">${v}</td>`;      /* tooltip + truncate */
     });
-    html += '</tr>';
+    html+='</tr>';
   });
-
-  html += '</tbody></table></div>';
-  const container = document.getElementById('view');
-  container.innerHTML = html;
-  container.dataset.renderedRows = rows.length;
+  html+='</tbody></table></div>';
+  const el=document.getElementById('view');
+  el.innerHTML=html;
+  el.dataset.renderedRows=rows.length;
 }
 
-/* ===== EXPORT ===== */
+/* ===== EXPORT ===== */
 function toCSV(rows){
-  const headers = Object.keys(rows[0] || {});
-  const csv = [
-    headers.join(','),
-    ...rows.map(r=>headers.map(h=>JSON.stringify(r[h]??'')).join(','))
-  ].join('\n');
-  return csv;
+  const headers=Object.keys(rows[0]||{});
+  return [headers.join(','),...rows.map(r=>headers.map(h=>JSON.stringify(r[h]??'')).join(','))].join('\n');
 }
 
-/* ===== INIT ===== */
+/* ===== INIT & AUX ===== */
 async function init(){
-  const rows = ALL_ROWS = await loadCsv(CSV_URL);
+  const rows=ALL_ROWS=await loadCsv(CSV_URL);
   renderKpis(countKPIs(rows));
   renderTabs(rows);
   renderTable(rows);
   setLastSync();
 }
-
-/* ===== AUX ===== */
 function setLastSync(){
-  const now = new Date();
-  const text = new Intl.DateTimeFormat('en‑GB',{
-    timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',
-    hour:'2-digit',minute:'2-digit',second:'2-digit'
-  }).format(now);
-  document.getElementById('lastSync').textContent = `Last sync: ${text}`;
+  document.getElementById('lastSync').textContent=
+    'Last sync: '+new Intl.DateTimeFormat('en-GB',{
+      timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',
+      hour:'2-digit',minute:'2-digit'
+    }).format(new Date());
 }
 
-/* ===== EVENTS ===== */
-document.getElementById('btnRefresh').onclick = init;
-document.getElementById('btnExport').onclick = ()=>{
-  const rendered = Number(document.getElementById('view').dataset.renderedRows||0);
-  const blob = new Blob([toCSV(ALL_ROWS.slice(0,rendered))],{type:'text/csv'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `contacts_export_${Date.now()}.csv`;
+/* ===== EVENTS ===== */
+document.getElementById('btnRefresh').onclick=init;
+document.getElementById('btnExport').onclick=()=>{
+  const rendered=+document.getElementById('view').dataset.renderedRows||0;
+  const blob=new Blob([toCSV(ALL_ROWS.slice(0,rendered))],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='contacts_export_'+Date.now()+'.csv';
   a.click();
 };
 
-/* ===== START ===== */
+/* ===== START ===== */
 init();
 </script>
 </body>
