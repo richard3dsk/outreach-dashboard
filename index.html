@@ -1,6 +1,4 @@
-<!doctype html>
-<html lang="en">
-<head>
+
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>3D.sk – Outreach Dashboard</title>
@@ -74,9 +72,10 @@
   </main>
 
 <script>
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZOSOSxfS-YBKi0GNNDJ4FkwX1yNkg47Wivbb1936rkHiFabJ98rerOsOEdlZ2WFzxr2R5J0ZWWp2p/pub?gid=0&single=true&output=csv";
+////const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZOSOSxfS-YBKi0GNNDJ4FkwX1yNkg47Wivbb1936rkHiFabJ98rerOsOEdlZ2WFzxr2R5J0ZWWp2p/pub?gid=0&single=true&output=csv";
+const CSV_URL = "https://docs.google.com/spreadsheets/d/1D1OL0oAvxWTNJYG6SnwraibBupq0TXRoUxNTWOTBg-I/export?format=csv&gid=1094232450";
 const TZ = "Europe/Bratislava";
-let ALL_ROWS = [];
+let ALL_ROWS = []; ALL_ROWS = [];
 
 const normStr = s => String(s ?? "").replace(/\uFEFF/g,"").trim();
 const stageOf = r => normStr(r.stage).toLowerCase();
